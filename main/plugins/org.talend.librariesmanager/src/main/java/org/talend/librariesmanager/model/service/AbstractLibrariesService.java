@@ -95,10 +95,19 @@ public abstract class AbstractLibrariesService implements ILibrariesService {
 
     @Override
     public void deployLibrary(URL source) throws IOException {
-        deployLibrary(source, true);
+        deployLibrary(source, null, true);
+    }
+    
+    @Override
+    public void deployLibrary(URL source, String mavenUri) throws IOException {
+        deployLibrary(source, mavenUri, true);
+    }
+    
+    private void deployLibrary(URL source, boolean reset) throws IOException {
+        deployLibrary(source, reset);
     }
 
-    private void deployLibrary(URL source, boolean reset) throws IOException {
+    private void deployLibrary(URL source, String mavenUri, boolean reset) throws IOException {
 
         // fix for bug 0020953
         // if jdk is not 1.5, need decode %20 for space.
@@ -109,7 +118,7 @@ public abstract class AbstractLibrariesService implements ILibrariesService {
                 + sourceFile.getName());
 
         if (!repositoryBundleService.contains(source.getFile())) {
-            repositoryBundleService.deploy(sourceFile.toURI());
+            repositoryBundleService.deploy(sourceFile.toURI(), mavenUri);
         }
 
         ModulesNeededProvider.userAddImportModules(targetFile.getPath(), sourceFile.getName(), ELibraryInstallStatus.INSTALLED);

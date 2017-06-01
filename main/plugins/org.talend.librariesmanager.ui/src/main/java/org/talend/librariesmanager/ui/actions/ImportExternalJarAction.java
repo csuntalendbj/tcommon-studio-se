@@ -34,6 +34,7 @@ import org.talend.commons.ui.runtime.image.ImageProvider;
 import org.talend.commons.utils.io.FilesUtils;
 import org.talend.commons.utils.workbench.resources.ResourceUtils;
 import org.talend.core.GlobalServiceRegister;
+import org.talend.core.model.general.ModuleToInstall;
 import org.talend.core.model.general.Project;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.designer.runprocess.IRunProcessService;
@@ -80,7 +81,7 @@ public class ImportExternalJarAction extends Action {
         return handleImportJarDialog(shell, null);
     }
 
-    public String[] handleImportJarDialog(Shell shell, String moduleName) {
+    public String[] handleImportJarDialog(Shell shell, ModuleToInstall module) {
         FileDialog fileDialog = new FileDialog(shell, SWT.OPEN | SWT.MULTI);
         fileDialog.setFilterExtensions(FilesUtils.getAcceptJARFilesSuffix());
         fileDialog.open();
@@ -96,20 +97,21 @@ public class ImportExternalJarAction extends Action {
                     File file = new File(path + File.separatorChar + fileName);
                     File tempFile = null;
                     try {
-                        if (moduleName != null && fileNames.length == 1 && !file.isDirectory()
-                                && !file.getName().equals(moduleName)) {
+                        if (module.getName() != null && fileNames.length == 1 && !file.isDirectory()
+                                && !file.getName().equals(module.getName())) {
                             Project project = ProjectManager.getInstance().getCurrentProject();
                             IProject fsProject = ResourceUtils.getProject(project);
                             IFolder tmpFolder = fsProject.getFolder("temp");
                             if (!tmpFolder.exists()) {
                                 tmpFolder.create(true, true, null);
                             }
-                            tempFile = new File(tmpFolder.getLocation().toPortableString(), moduleName);
+                            tempFile = new File(tmpFolder.getLocation().toPortableString(), module.getName());
                             FilesUtils.copyFile(file, tempFile);
                             file = tempFile;
                             fileNames[i] = file.getName();
                         }
-                        LibManagerUiPlugin.getDefault().getLibrariesService().deployLibrary(file.toURL());
+                        
+                        LibManagerUiPlugin.getDefault().getLibrariesService().deployLibrary(file.toURL(), module.getMavenUri());
                         if (tempFile != null) {
                             FilesUtils.deleteFile(tempFile, true);
                         }

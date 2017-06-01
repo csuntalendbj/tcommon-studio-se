@@ -30,6 +30,8 @@ import org.ops4j.pax.url.mvn.MavenResolver;
 import org.talend.commons.exception.BusinessException;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.core.model.general.ModuleNeeded.ELibraryInstallStatus;
+import org.talend.core.GlobalServiceRegister;
+import org.talend.core.model.general.INexusService;
 import org.talend.core.model.general.ModuleStatusProvider;
 import org.talend.core.nexus.NexusConstants;
 import org.talend.core.nexus.NexusServerBean;
@@ -150,9 +152,9 @@ public class ArtifactsDeployer {
             if (toRemoteNexus) {
                 installToRemote(libFile, parseMvnUrl, artifactType);
                 // deploy the pom
-                if (pomFile != null && pomFile.exists()) {
-                    installToRemote(pomFile, parseMvnUrl, pomType);
-                }
+//                if (pomFile != null && pomFile.exists()) {
+//                    installToRemote(pomFile, parseMvnUrl, pomType);
+//                }
             }
             if (generated) { // only for generate pom
                 FilesUtils.deleteFolder(pomFile.getParentFile(), true);
@@ -168,26 +170,32 @@ public class ArtifactsDeployer {
         if (nexusServer == null) {
             return;
         }
-        URL targetURL;
+//        URL targetURL;
         try {
-            String artifactPath = PomUtil.getArtifactPath(artifact);
-            if (!artifactPath.endsWith(type)) {
-                if (artifactPath.lastIndexOf(".") != -1) {
-                    artifactPath = artifactPath.substring(0, artifactPath.lastIndexOf(".") + 1) + type;
-                } else {
-                    artifactPath = artifactPath + "." + type;
-                }
+//            String artifactPath = PomUtil.getArtifactPath(artifact);
+//            if (!artifactPath.endsWith(type)) {
+//                if (artifactPath.lastIndexOf(".") != -1) {
+//                    artifactPath = artifactPath.substring(0, artifactPath.lastIndexOf(".") + 1) + type;
+//                } else {
+//                    artifactPath = artifactPath + "." + type;
+//                }
+//            }
+//            String target = repositoryUrl;
+//            if (artifact.getVersion() != null && artifact.getVersion().endsWith(MavenConstants.SNAPSHOT)) {
+//                target = target + nexusServer.getSnapshotRepId() + NexusConstants.SLASH;
+//            } else {
+//                target = target + nexusServer.getRepositoryId() + NexusConstants.SLASH;
+//            }
+            
+            if (GlobalServiceRegister.getDefault().isServiceRegistered(INexusService.class)) {
+                INexusService nexusService = (INexusService) GlobalServiceRegister.getDefault().getService(
+                        INexusService.class);
+                nexusService.upload(nexusServer, artifact.getGroupId(), artifact.getArtifactId(), artifact.getVersion(), content.toURI().toURL());
             }
-            String target = repositoryUrl;
-            if (artifact.getVersion() != null && artifact.getVersion().endsWith(MavenConstants.SNAPSHOT)) {
-                target = target + nexusServer.getSnapshotRepId() + NexusConstants.SLASH;
-            } else {
-                target = target + nexusServer.getRepositoryId() + NexusConstants.SLASH;
-            }
-            target = target + artifactPath;
-            targetURL = new URL(target);
-            installToRemote(new FileEntity(content), targetURL);
-        } catch (MalformedURLException e) {
+//            target = target + artifactPath;
+//            targetURL = new URL(target);
+//            installToRemote(new FileEntity(content), targetURL);
+        } catch (Exception e) {
             ExceptionHandler.process(e);
         }
     }

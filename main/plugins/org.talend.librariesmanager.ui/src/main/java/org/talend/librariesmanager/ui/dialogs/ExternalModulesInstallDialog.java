@@ -894,7 +894,7 @@ public class ExternalModulesInstallDialog extends TitleAreaDialog implements IMo
     public void showImportJarDialog(AtomicInteger enabledButtonCount, TableItem item) {
         if (item.getData() instanceof ModuleToInstall) {
             ModuleToInstall module = (ModuleToInstall) item.getData();
-            String[] importedJars = new ImportExternalJarAction().handleImportJarDialog(getShell(), module.getName());
+            String[] importedJars = new ImportExternalJarAction().handleImportJarDialog(getShell(), module);
             updateManualImportedJars(enabledButtonCount, importedJars);
             if (importedJars.length > 1) {
                 String message = "";

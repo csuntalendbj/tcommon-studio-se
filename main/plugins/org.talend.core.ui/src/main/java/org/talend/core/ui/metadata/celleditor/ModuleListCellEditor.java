@@ -165,14 +165,14 @@ public class ModuleListCellEditor extends DialogCellEditor {
         if (dialog.open() == Window.OK) {
             String selecteModule = dialog.getSelecteModule();
             if (selecteModule != null && (value == null || !value.equals(selecteModule) || dialog.isSelectChanged())) {
-            	setModuleValue(selecteModule,dialog.getSelectedVersion());
+                setModuleValue(selecteModule, dialog.getSelectedJarPath(), dialog.getSelectedJarVersion());
                 return selecteModule;
             }
         }
         return null;
     }
     
-    private void setModuleValue(String newValue,String newVersion) {
+    private void setModuleValue(String newValue, String newVal, String nexusVersion) {
         int index = 0;
         if (getTableViewer() != null) {
             if (getTableViewer().getTable() != null && !getTableViewer().getTable().isDisposed())
@@ -191,8 +191,11 @@ public class ModuleListCellEditor extends DialogCellEditor {
         //
         executeCommand(new ModelChangeCommand(tableParam, param.getName(), newValue, index));
 
-        if(newVersion!=null){
-        	executeCommand(new ModelChangeCommand(tableParam, "JAR_VERSION", newVersion, index));
+        if(newVal != null){
+        	executeCommand(new ModelChangeCommand(tableParam, "JAR_PATH", newVal, index));
+        }
+        if (nexusVersion != null) {
+            executeCommand(new ModelChangeCommand(tableParam, "JAR_NEXUS_VERSION", nexusVersion, index));
         }
         
         oldValue = newValue;
@@ -202,7 +205,7 @@ public class ModuleListCellEditor extends DialogCellEditor {
     }
 
     private void setModuleValue(String newValue) {
-    	setModuleValue(newValue, null);
+        setModuleValue(newValue, null, null);
     }
 
     /**
