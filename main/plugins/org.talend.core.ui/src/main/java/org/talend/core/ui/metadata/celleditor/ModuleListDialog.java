@@ -171,7 +171,7 @@ public class ModuleListDialog extends Dialog {
         selectField = new LabelledFileField(c,
                 Messages.getString("ModuleListCellEditor.selectLabel"), FilesUtils.getAcceptJARFilesSuffix()); //$NON-NLS-1$
 
-        if ("cConfig".equals(this.param.getElement().getElementParameter("COMPONENT_NAME").getValue())) {
+        if (param != null && "cConfig".equals(this.param.getElement().getElementParameter("COMPONENT_NAME").getValue())) {
             versionLabel = new LabelledText(c, "Version");
             IElementParameter param = this.param.getElement().getElementParameter("DRIVER_JAR");
             List jars = (List) param.getValue();
