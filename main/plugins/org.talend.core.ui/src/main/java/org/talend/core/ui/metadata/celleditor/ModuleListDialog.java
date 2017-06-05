@@ -416,9 +416,10 @@ public class ModuleListDialog extends Dialog {
                         ILibrariesService service = (ILibrariesService) GlobalServiceRegister.getDefault().getService(
                                 ILibrariesService.class);
                         
-                        IElementParameter componentName = param.getElement().getElementParameter("COMPONENT_NAME");
-                        
                         if (param != null) {
+                            
+                            IElementParameter componentName = param.getElement().getElementParameter("COMPONENT_NAME");
+                            
                             if(componentName !=null && "cConfig".equals(componentName.getValue())){
                                 selectedJarPath = jarPath;
                                 selectedJarVersion = versionLabel.getText();
