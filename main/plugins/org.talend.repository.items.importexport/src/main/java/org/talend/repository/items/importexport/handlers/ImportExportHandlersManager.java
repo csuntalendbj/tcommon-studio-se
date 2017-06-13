@@ -612,13 +612,16 @@ public class ImportExportHandlersManager {
                                 if (itemRecord.isImported()) {
                                     continue; // have imported
                                 }
+
                                 if ((ERepositoryObjectType.JOBLET == itemRecord.getRepositoryType())
+                                        || (ERepositoryObjectType.PROCESS_ROUTELET == itemRecord.getRepositoryType())
                                         || (ERepositoryObjectType.SPARK_JOBLET == itemRecord.getRepositoryType())
                                         || (ERepositoryObjectType.SPARK_STREAMING_JOBLET == itemRecord.getRepositoryType())) {
                                     hasJoblet = true;
                                 }
                                 if (hasJoblet && !jobletReloaded) {
                                     if (ERepositoryObjectType.JOBLET != itemRecord.getRepositoryType()
+                                            && ERepositoryObjectType.PROCESS_ROUTELET != itemRecord.getRepositoryType()
                                             && ERepositoryObjectType.SPARK_JOBLET != itemRecord.getRepositoryType()
                                             && ERepositoryObjectType.SPARK_STREAMING_JOBLET != itemRecord.getRepositoryType()) {
                                         // fix for TUP-3032 ,processingItemRecords is a sorted list with joblet before
