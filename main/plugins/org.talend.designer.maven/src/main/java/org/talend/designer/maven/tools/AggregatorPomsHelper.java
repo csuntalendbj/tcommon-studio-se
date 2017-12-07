@@ -14,11 +14,9 @@ package org.talend.designer.maven.tools;
 
 import static org.talend.designer.maven.model.TalendJavaProjectConstants.*;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 import org.apache.maven.model.Dependency;
@@ -27,7 +25,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
@@ -107,14 +104,8 @@ public class AggregatorPomsHelper {
         return workspace.getRoot().getFolder(new Path(project.getTechnicalLabel() + "/" + DIR_POMS)); //$NON-NLS-1$
     }
 
-    public void createAggregatorFolderPom(IFolder folder, String folderName, String groupId, IProgressMonitor monitor)
-            throws Exception {
-        if (folder != null) {
-            IFile pomFile = folder.getFile(TalendMavenConstants.POM_FILE_NAME);
-            Model model = MavenTemplateManager.getAggregatorFolderTemplateModel(pomFile, groupId, folderName,
-                    project.getTechnicalLabel());
-            PomUtil.savePom(monitor, model, pomFile);
-        }
+    public IFolder getDeploymentsFolder() {
+        return getProjectPomsFolder().getFolder(DIR_DEPLOYMENTS);
     }
 
     public static void updatePomIfCreate(IProgressMonitor monitor, IFile pomFile, Property property) {
@@ -191,91 +182,6 @@ public class AggregatorPomsHelper {
         createTemplatePom.create(monitor);
     }
 
-    public void createUserDefinedFolderPom(IFile pomFile, String folderName, String groupId, IProgressMonitor monitor) {
-        // TODO get model like createAggregatorFolderPom(), but calculate parent's relative path.
-        // PomUtil.getPomRelativePath(container, baseFolder);
-    }
-
-    public static void addToParentModules(IFile pomFile) throws Exception {
-        File parentPom = getParentModulePomFile(pomFile);
-        if (parentPom != null) {
-            IPath relativePath = pomFile.getLocation().makeRelativeTo(new Path(parentPom.getParentFile().getAbsolutePath()));
-            Model model = MavenPlugin.getMaven().readModel(parentPom);
-            List<String> modules = model.getModules();
-            if (modules == null) {
-                modules = new ArrayList<>();
-                model.setModules(modules);
-            }
-            if (!modules.contains(relativePath.toPortableString())) {
-                modules.add(relativePath.toPortableString());
-                PomUtil.savePom(null, model, parentPom);
-            }
-        }
-    }
-
-    public static void removeFromParentModules(IFile pomFile) throws Exception {
-        File parentPom = getParentModulePomFile(pomFile);
-        if (parentPom != null) {
-            IPath relativePath = pomFile.getLocation().makeRelativeTo(new Path(parentPom.getParentFile().getAbsolutePath()));
-            Model model = MavenPlugin.getMaven().readModel(parentPom);
-            List<String> modules = model.getModules();
-            if (modules == null) {
-                modules = new ArrayList<>();
-                model.setModules(modules);
-            }
-            if (modules != null && modules.contains(relativePath.toPortableString())) {
-                modules.remove(relativePath.toPortableString());
-                PomUtil.savePom(null, model, parentPom);
-            }
-        }
-    }
-
-    private static File getParentModulePomFile(IFile pomFile) {
-        File parentPom = null;
-        if (pomFile == null || pomFile.getParent() == null || pomFile.getParent().getParent() == null) {
-            return null;
-        }
-        if (pomFile.getParent().getName().equals(TalendMavenConstants.PROJECT_NAME)) {
-            // ignore .Java project
-            return null;
-        }
-        File pom = pomFile.getLocation().toFile();
-        File parentPomFolder = null;
-        if (pom.getParentFile() != null) {
-            parentPomFolder = pom.getParentFile().getParentFile();
-        }
-        if (parentPomFolder != null) {
-            for (File file : parentPomFolder.listFiles()) {
-                if (file.getName().equals(TalendMavenConstants.POM_FILE_NAME)) {
-                    parentPom = file;
-                    break;
-                }
-            }
-        }
-        return parentPom;
-    }
-
-    public void refreshAggregatorFolderPom(IFile pomFile) throws Exception {
-        boolean isModified = false;
-        File pom = pomFile.getLocation().toFile();
-        Model model = MavenPlugin.getMaven().readModel(pom);
-        List<String> modules = model.getModules();
-        if (modules != null) {
-            ListIterator<String> iterator = modules.listIterator();
-            while (iterator.hasNext()) {
-                String module = iterator.next();
-                File modulePomFile = pomFile.getLocation().removeLastSegments(1).append(module).toFile();
-                if (!modulePomFile.exists()) {
-                    iterator.remove();
-                    isModified = true;
-                }
-            }
-            if (isModified) {
-                PomUtil.savePom(null, model, pomFile);
-            }
-        }
-    }
-
     public IFile getProjectRootPom(Project project) {
         if (project == null) {
             project = ProjectManager.getInstance().getCurrentProject();
@@ -293,6 +199,26 @@ public class AggregatorPomsHelper {
 
     public IFolder getProcessFolder(ERepositoryObjectType type) {
         return getProcessesFolder().getFolder(type.getFolder());
+    }
+
+    public static String getJobProjectName(Project project, Property property) {
+        return project.getTechnicalLabel() + "_" + getJobProjectFolderName(property).toUpperCase(); //$NON-NLS-1$
+    }
+
+    public static String getJobProjectFolderName(Property property) {
+        return getJobProjectFolderName(property.getLabel(), property.getVersion());
+    }
+
+    public static String getJobProjectFolderName(String label, String version) {
+        return label.toLowerCase() + "_" + version; //$NON-NLS-1$
+    }
+
+    public static String getJobProjectId(String id, String version) {
+        return id + "|" + version; //$NON-NLS-1$
+    }
+
+    public static String getJobProjectId(Property property) {
+        return getJobProjectId(property.getId(), property.getVersion());
     }
 
 }

@@ -718,8 +718,6 @@ public final class ProxyRepositoryFactory implements IProxyRepositoryFactory {
             checkAvailability(object);
         }
         this.repositoryFactoryFromProvider.deleteObjectLogical(project, object);
-        
-        getRunProcessService().removeFromAggregatorPomModule(objToDelete.getProperty());
         // unlock(objToDelete);
         // i18n
         // log.debug("Logical deletion [" + objToDelete + "] by " + getRepositoryContext().getUser() + ".");

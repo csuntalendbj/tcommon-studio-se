@@ -211,9 +211,9 @@ public interface IRunProcessService extends IService {
 
     ITalendProcessJavaProject getTalendJobJavaProject(Property property);
 
-    ITalendProcessJavaProject getExistingTalendJobJavaProjectById(String id);
+    ITalendProcessJavaProject getExistingTalendJobJavaProject(String id, String version);
 
-    void deleteTalendJobJavaProject(Property property);
+    void deleteAllVersionTalendJobProject(String id);
 
     ITalendProcessJavaProject getTempJavaProject();
 
@@ -222,9 +222,5 @@ public interface IRunProcessService extends IService {
     boolean isExportConfig();
 
     String getAbsMavenArtifactPath(MavenArtifact artifact);
-
-    void removeFromAggregatorPomModule(Property property);
-    
-    void addToAggregatorPomModule(Property property);
 
 }

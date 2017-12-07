@@ -19,6 +19,8 @@ public class TalendJavaProjectConstants {
 
     public static final String DIR_POMS = "poms"; //$NON-NLS-1$
 
+    public static final String DIR_DEPLOYMENTS = "deployments"; //$NON-NLS-1$
+
     public static final String DIR_CODES = "code"; //$NON-NLS-1$
 
     public static final String DIR_ROUTINES = "routines"; //$NON-NLS-1$

@@ -322,7 +322,7 @@ public class EmptyRecycleBinAction extends AContextualAction {
                                 if (ERepositoryObjectType.getAllTypesOfProcess().contains(nodeType)) {
                                     IRunProcessService service = (IRunProcessService) GlobalServiceRegister.getDefault().getService(IRunProcessService.class);
                                     if (service != null) {
-                                        service.deleteTalendJobJavaProject(objToDelete.getProperty());
+                                        service.deleteAllVersionTalendJobProject(objToDelete.getId());
                                     }
                                 }
 

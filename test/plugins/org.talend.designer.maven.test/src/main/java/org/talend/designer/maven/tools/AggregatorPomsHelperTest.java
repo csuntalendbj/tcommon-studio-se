@@ -35,7 +35,7 @@ public class AggregatorPomsHelperTest {
         String projectTechName = ProjectManager.getInstance().getCurrentProject().getTechnicalLabel();
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         IFolder pomsFolder = root.getFolder(new Path(projectTechName + "/" + TalendJavaProjectConstants.DIR_POMS));
-        IFolder jobFolder = pomsFolder.getFolder("jobs").getFolder("process").getFolder("item_job1");
+        IFolder jobFolder = pomsFolder.getFolder("jobs").getFolder("process").getFolder("job1");
         if (!jobFolder.exists()) {
             jobFolder.create(true, true, null);
         }
@@ -45,13 +45,13 @@ public class AggregatorPomsHelperTest {
         IFile processPom = pomsFolder.getFolder("jobs").getFolder("process").getFile("pom.xml");
         Model model = MavenPlugin.getMavenModelManager().readMavenModel(processPom);
         assertNotNull(model.getModules());
-        assertTrue(model.getModules().contains("item_job1/pom.xml"));
+        assertTrue(model.getModules().contains("job1/pom.xml"));
 
         AggregatorPomsHelper.removeFromParentModules(jobPom);
 
         model = MavenPlugin.getMavenModelManager().readMavenModel(processPom);
         assertNotNull(model.getModules());
-        assertFalse(model.getModules().contains("item_job1/pom.xml"));
+        assertFalse(model.getModules().contains("job1/pom.xml"));
     }
 
 }

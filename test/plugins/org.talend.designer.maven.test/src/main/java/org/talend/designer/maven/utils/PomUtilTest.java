@@ -468,7 +468,7 @@ public class PomUtilTest {
         String relativePath = PomUtil.getPomRelativePath(routinePom.getLocation().toFile(), "poms");
         assertEquals("../../", relativePath);
         
-        IFolder jobFolder = pomsFolder.getFolder("jobs").getFolder("process").getFolder("item_relativeTest");
+        IFolder jobFolder = pomsFolder.getFolder("jobs").getFolder("process").getFolder("relativeTest");
         if (!jobFolder.exists()) {
             jobFolder.create(true, true, null);
         }

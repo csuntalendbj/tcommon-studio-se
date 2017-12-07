@@ -5,12 +5,6 @@
 	<artifactId>@ProjectArtifactId@</artifactId>
 	<version>@ProjectVersion@</version>
 	<packaging>pom</packaging>
-
-	<modules>
-		<module>code/pom.xml</module>
-    	<module>jobs/pom.xml</module>
-	</modules>
-
 	<name>@ProjectName@ Codes Master</name>
 	<url>http://www.talend.org/</url>
 

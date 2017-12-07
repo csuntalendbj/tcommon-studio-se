@@ -51,7 +51,6 @@ import org.talend.core.repository.i18n.Messages;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
 import org.talend.core.service.ICoreUIService;
 import org.talend.core.ui.ITestContainerProviderService;
-import org.talend.designer.runprocess.IRunProcessService;
 import org.talend.repository.ProjectManager;
 import org.talend.repository.model.IProxyRepositoryFactory;
 import org.talend.repository.model.IRepositoryNode;
@@ -149,11 +148,6 @@ public class RestoreAction extends AContextualAction {
                 }
                 nodeType = parent.getObjectType();
             }
-            if (GlobalServiceRegister.getDefault().isServiceRegistered(IRunProcessService.class)) {
-                IRunProcessService runProcessService = (IRunProcessService) GlobalServiceRegister.getDefault().getService(IRunProcessService.class);
-                runProcessService.addToAggregatorPomModule(node.getObject().getProperty());
-            }
-            
             if (node.hasChildren()) {
                 for (IRepositoryNode childNode : node.getChildren()) {
                     restoreNode((RepositoryNode) childNode);
