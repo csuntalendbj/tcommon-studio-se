@@ -1918,6 +1918,16 @@ public class ProcessorUtilities {
         }
         return null;
     }
+    
+
+    public static String getJavaProjectLibFolderPath() {
+        if (GlobalServiceRegister.getDefault().isServiceRegistered(IRunProcessService.class)) {
+            IRunProcessService processService = (IRunProcessService) GlobalServiceRegister.getDefault().getService(
+                    IRunProcessService.class);
+            return processService.getJavaProjectLibFolder().getLocation().toPortableString();
+        }
+        return null;
+    }
 
     public static boolean isExportAsOSGI() {
         return exportAsOSGI;

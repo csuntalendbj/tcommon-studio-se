@@ -14,10 +14,7 @@ package org.talend.core.runtime.maven;
 
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.core.runtime.Path;
 import org.talend.commons.exception.ExceptionHandler;
-import org.talend.core.GlobalServiceRegister;
-import org.talend.designer.runprocess.IRunProcessService;
 
 /**
  * DOC ggu class global comment. Detailled comment
@@ -254,24 +251,6 @@ public class MavenUrlHelper {
         }
         moduleName = moduleName + "." + parseMvnUrl.getType();
         return moduleName;
-    }
-
-    public static String getAbsMavenArtifactPath(String jarName) {
-        String path = null;
-        String mvnUrl = generateMvnUrlForJarName(jarName, true, false);
-        if (mvnUrl != null) {
-            MavenArtifact artifact = parseMvnUrl(mvnUrl);
-            if (artifact != null) {
-                if (GlobalServiceRegister.getDefault().isServiceRegistered(IRunProcessService.class)) {
-                    IRunProcessService service = (IRunProcessService) GlobalServiceRegister.getDefault().getService(IRunProcessService.class);
-                    path = service.getAbsMavenArtifactPath(artifact);
-                    if (path != null) {
-                        path = new Path(path).toPortableString();
-                    }
-                }
-            }
-        }
-        return path;
     }
 
 }
