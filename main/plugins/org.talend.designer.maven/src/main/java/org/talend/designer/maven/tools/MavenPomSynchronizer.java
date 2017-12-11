@@ -61,9 +61,9 @@ import org.talend.utils.io.FilesUtils;
 public class MavenPomSynchronizer {
 
     private final ITalendProcessJavaProject codeProject;
-    
+
     private IRunProcessService runProcessService;
-    
+
     public MavenPomSynchronizer(IProcessor processor) {
         this(processor.getTalendJavaProject());
     }
@@ -91,7 +91,8 @@ public class MavenPomSynchronizer {
     }
 
     public void syncBeansPom(Property property, boolean overwrite) throws Exception {
-        ITalendProcessJavaProject beansProject = runProcessService.getTalendCodeJavaProject(ERepositoryObjectType.valueOf("BEANS")); //$NON-NLS-1$
+        ITalendProcessJavaProject beansProject = runProcessService
+                .getTalendCodeJavaProject(ERepositoryObjectType.valueOf("BEANS")); //$NON-NLS-1$
         IFile beansPomFile = beansProject.getProjectPom();
         // generate new one
         CreateMavenBeanPom createTemplatePom = new CreateMavenBeanPom(beansPomFile);
@@ -121,7 +122,7 @@ public class MavenPomSynchronizer {
             codeProject.buildModules(new NullProgressMonitor(), null, argumentsMap);
         }
     }
-    
+
     /**
      * 
      * sync the bat/sh/jobInfo to resources template folder.
@@ -207,9 +208,10 @@ public class MavenPomSynchronizer {
         // empty the src/main/java...
         IFolder srcFolder = codeProject.getSrcFolder();
         codeProject.cleanFolder(monitor, srcFolder);
-        // contexts
+
+        // empty resources
         IFolder resourcesFolder = codeProject.getResourcesFolder();
-        emptyContexts(monitor, resourcesFolder, codeProject);
+        codeProject.cleanFolder(monitor, resourcesFolder);
 
         // empty the outputs, target
         IFolder targetFolder = codeProject.getTargetFolder();
@@ -230,7 +232,7 @@ public class MavenPomSynchronizer {
         // sqltemplate
         IFolder sqlTemplateResFolder = codeProject.getResourceSubFolder(monitor, JavaUtils.JAVA_SQLPATTERNS_DIRECTORY);
         codeProject.cleanFolder(monitor, sqlTemplateResFolder);
-        
+
         // clean all assemblies in src/main/assemblies
         fullCleanupContainer(codeProject.getAssembliesFolder());
 
@@ -283,27 +285,6 @@ public class MavenPomSynchronizer {
         }
     }
 
-    private static void emptyContexts(IProgressMonitor monitor, IContainer baseContainer,
-            ITalendProcessJavaProject talendJavaProject) throws CoreException {
-        IPath location = baseContainer.getLocation();
-        File[] listFiles = location.toFile().listFiles();
-        if (listFiles != null) { // for each project sub folder
-            for (File child : listFiles) {
-                File testContextFile = findTestContextFile(child);
-                if (testContextFile != null) {
-                    IPath testContextPath = new Path(testContextFile.toString());
-                    IPath testRelativePath = testContextPath.makeRelativeTo(location);
-                    String projectSegment = testRelativePath.segment(0);
-                    IFolder folder = baseContainer.getFolder(new Path(projectSegment));
-                    talendJavaProject.cleanFolder(monitor, folder);
-                    if (folder.exists()) { // also delete it
-                        folder.delete(true, monitor);
-                    }
-                }
-            }
-        }
-    }
-
     private static File findTestContextFile(File file) {
         if (file != null) {
             if (file.getName().endsWith(JavaUtils.JAVA_CONTEXT_EXTENSION)
@@ -324,5 +305,5 @@ public class MavenPomSynchronizer {
         }
         return null;
     }
-    
+
 }
