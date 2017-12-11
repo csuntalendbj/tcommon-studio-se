@@ -26,16 +26,15 @@ import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.MavenModelManager;
+import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.utils.generation.JavaUtils;
 import org.talend.core.GlobalServiceRegister;
+import org.talend.core.model.general.ILibrariesService;
 import org.talend.core.model.process.IProcess;
 import org.talend.core.model.process.ProcessUtils;
 import org.talend.core.model.properties.Property;
@@ -63,6 +62,8 @@ public class MavenPomSynchronizer {
     private final ITalendProcessJavaProject codeProject;
 
     private IRunProcessService runProcessService;
+
+    private static boolean isListenerAdded;
 
     public MavenPomSynchronizer(IProcessor processor) {
         this(processor.getTalendJavaProject());
@@ -244,6 +245,31 @@ public class MavenPomSynchronizer {
 
         codeProject.getProject().refreshLocal(IResource.DEPTH_ONE, monitor);
 
+        if (!isListenerAdded) {
+            synchronized (this) {
+                if (!isListenerAdded) {
+                    if (GlobalServiceRegister.getDefault().isServiceRegistered(ILibrariesService.class)) {
+                        ILibrariesService libService = (ILibrariesService) GlobalServiceRegister.getDefault()
+                                .getService(ILibrariesService.class);
+                        libService.addChangeLibrariesListener(new ILibrariesService.IChangedLibrariesListener() {
+
+                            @Override
+                            public void afterChangingLibraries() {
+                                try {
+                                    // update the dependencies
+                                    syncCodesPoms(monitor, null, true);
+                                } catch (Exception e) {
+                                    ExceptionHandler.process(e);
+                                }
+                            }
+                        });
+
+                    }
+                    isListenerAdded = true;
+                }
+            }
+
+        }
     }
 
     private void fullCleanupContainer(IContainer container) {
@@ -273,15 +299,19 @@ public class MavenPomSynchronizer {
 
     public void syncCodesPoms(IProgressMonitor monitor, IProcessor processor, boolean overwrite) throws Exception {
         final IProcess process = processor != null ? processor.getProcess() : null;
+        Property property = null;
+        if (processor != null) {
+            property = processor.getProperty();
+        }
 
-        syncRoutinesPom(processor.getProperty(), overwrite);
+        syncRoutinesPom(property, overwrite);
         // PigUDFs
         if (ProcessUtils.isRequiredPigUDFs(process)) {
-            syncPigUDFsPom(processor.getProperty(), overwrite);
+            syncPigUDFsPom(property, overwrite);
         }
         // Beans
         if (ProcessUtils.isRequiredBeans(process)) {
-            syncBeansPom(processor.getProperty(), overwrite);
+            syncBeansPom(property, overwrite);
         }
     }
 
