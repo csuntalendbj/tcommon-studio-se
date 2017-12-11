@@ -13,6 +13,7 @@
 package org.talend.core.services;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.talend.commons.exception.PersistenceException;
 import org.talend.core.IService;
 import org.talend.core.model.general.Project;
@@ -35,5 +36,7 @@ public interface IGITProviderService extends IService {
     public void gitEclipseHandlerDelete(IProject eclipseProject, Project currentProject, String filePath);
 
     public void clean();
+
+    void createOrUpdateGitIgnoreFile(IProject eclipseProject) throws CoreException;
 
 }
