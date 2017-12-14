@@ -610,7 +610,8 @@ public final class ProxyRepositoryFactory implements IProxyRepositoryFactory {
         }
         this.repositoryFactoryFromProvider.moveFolder(type, sourcePath, targetPath);
         if (type == ERepositoryObjectType.PROCESS) {
-            fireRepositoryPropertyChange(ERepositoryActionName.FOLDER_MOVE.getName(), sourcePath, targetPath);
+            fireRepositoryPropertyChange(ERepositoryActionName.FOLDER_MOVE.getName(), new IPath[] { sourcePath, targetPath },
+                    type);
         }
         if (type == ERepositoryObjectType.JOBLET) {
             fireRepositoryPropertyChange(ERepositoryActionName.JOBLET_FOLDER_MOVE.getName(), sourcePath, targetPath);
@@ -680,14 +681,8 @@ public final class ProxyRepositoryFactory implements IProxyRepositoryFactory {
             throw new PersistenceException(Messages.getString("ProxyRepositoryFactory.RenameFolderContainsLockedItem")); //$NON-NLS-1$
         }
         this.repositoryFactoryFromProvider.renameFolder(type, path, label);
-        if (GlobalServiceRegister.getDefault().isServiceRegistered(IDocumentationService.class)) {
-            IDocumentationService service = (IDocumentationService) GlobalServiceRegister.getDefault().getService(
-                    IDocumentationService.class);
-            IGenerateAllDocumentation docGenerator = service.getDocGeneratorByProcessType(type);
-            if (docGenerator != null) {
-                fireRepositoryPropertyChange(ERepositoryActionName.FOLDER_RENAME.getName(), path, new Object[] { label, type });
-            }
-        }
+
+        fireRepositoryPropertyChange(ERepositoryActionName.FOLDER_RENAME.getName(), path, new Object[] { label, type });
 
         this.repositoryFactoryFromProvider.updateItemsPath(type, path.removeLastSegments(1).append(label));
     }

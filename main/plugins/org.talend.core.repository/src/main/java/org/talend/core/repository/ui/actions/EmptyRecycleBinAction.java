@@ -319,13 +319,6 @@ public class EmptyRecycleBinAction extends AContextualAction {
                                         }
                                     }
                                 }
-                                if (ERepositoryObjectType.getAllTypesOfProcess().contains(nodeType)) {
-                                    IRunProcessService service = (IRunProcessService) GlobalServiceRegister.getDefault().getService(IRunProcessService.class);
-                                    if (service != null) {
-                                        service.deleteAllVersionTalendJobProject(objToDelete.getId());
-                                    }
-                                }
-
                                 factory.deleteObjectPhysical(ProjectManager.getInstance().getCurrentProject(), objToDelete, null,
                                         true);
                             }
