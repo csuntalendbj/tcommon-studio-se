@@ -19,8 +19,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginExecution;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IWorkspace;
@@ -180,6 +183,31 @@ public class AggregatorPomsHelper {
     public static void createBeansPom(IFile pomFile, IProgressMonitor monitor) throws Exception {
         CreateMavenBeanPom createTemplatePom = new CreateMavenBeanPom(pomFile);
         createTemplatePom.create(monitor);
+    }
+
+    public void createCIPom(IFile pomFile, IProgressMonitor monitor) throws Exception {
+        Model model = new Model();
+        model.setModelVersion("4.0.0"); //$NON-NLS-1$
+        model.setGroupId(TalendMavenConstants.DEFAULT_GROUP_ID);
+        model.setArtifactId("sources.generator"); //$NON-NLS-1$
+        model.setVersion(PomIdsHelper.getProjectVersion());
+        model.setPackaging(TalendMavenConstants.PACKAGING_POM);
+
+        model.setBuild(new Build());
+        Plugin plugin = new Plugin();
+        plugin.setGroupId(TalendMavenConstants.DEFAULT_GROUP_ID);
+        plugin.setArtifactId("ci.builder"); //$NON-NLS-1$
+        plugin.setVersion("${project.version}"); //$NON-NLS-1$
+
+        List<PluginExecution> executions = new ArrayList<>();
+        PluginExecution pe = new PluginExecution();
+        pe.setPhase("generate-sources"); //$NON-NLS-1$
+        pe.addGoal("generate"); //$NON-NLS-1$
+        executions.add(pe);
+        plugin.setExecutions(executions);
+        model.getBuild().addPlugin(plugin);
+
+        PomUtil.savePom(null, model, pomFile);
     }
 
     public IFile getProjectRootPom(Project project) {

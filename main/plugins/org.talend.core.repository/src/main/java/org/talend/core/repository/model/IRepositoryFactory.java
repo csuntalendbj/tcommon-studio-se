@@ -58,6 +58,8 @@ public interface IRepositoryFactory {
 
     public static int OPTION_SKIP_DELETED = 1 << 3;
 
+    public static int OPTION_ALL_VERSION = 1 << 4;
+
     public String getId();
 
     public void setId(String id);
