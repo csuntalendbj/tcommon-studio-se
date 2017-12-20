@@ -1158,6 +1158,9 @@ public class ProcessorUtilities {
                                 if (BitwiseOptionUtils.containOption(option, GENERATE_TESTS)) {
                                     subJobOption |= GENERATE_TESTS;
                                 }
+                                if (BitwiseOptionUtils.containOption(option, GENERATE_WITHOUT_COMPILING)) {
+                                    subJobOption |= GENERATE_WITHOUT_COMPILING;
+                                }
                                 // children won't have stats / traces
                                 generateCode(subJobInfo, selectedContextName, statistics, false, properties, isNeedLoadmodules,
                                         subJobOption, progressMonitor);
