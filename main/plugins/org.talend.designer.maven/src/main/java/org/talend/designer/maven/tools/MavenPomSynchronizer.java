@@ -235,7 +235,7 @@ public class MavenPomSynchronizer {
         codeProject.cleanFolder(monitor, sqlTemplateResFolder);
 
         // clean all assemblies in src/main/assemblies
-        fullCleanupContainer(codeProject.getAssembliesFolder());
+        // fullCleanupContainer(codeProject.getAssembliesFolder());
 
         // clean all items in src/main/items
         fullCleanupContainer(codeProject.getItemsFolder());
