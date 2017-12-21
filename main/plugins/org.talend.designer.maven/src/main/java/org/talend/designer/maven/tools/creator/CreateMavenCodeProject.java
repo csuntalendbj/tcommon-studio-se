@@ -54,9 +54,9 @@ import org.eclipse.m2e.core.project.ProjectImportConfiguration;
 import org.eclipse.osgi.util.NLS;
 import org.osgi.service.prefs.BackingStoreException;
 import org.talend.commons.exception.ExceptionHandler;
+import org.talend.commons.utils.generation.JavaUtils;
 import org.talend.core.model.general.TalendJobNature;
 import org.talend.core.runtime.projectsetting.IProjectSettingTemplateConstants;
-import org.talend.designer.maven.DesignerMavenPlugin;
 import org.talend.designer.maven.model.MavenSystemFolders;
 import org.talend.designer.maven.model.ProjectSystemFolder;
 import org.talend.designer.maven.model.TalendMavenConstants;
@@ -354,36 +354,28 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         if (projectComplianceOptions == null || projectComplianceOptions.isEmpty()) {
             return;
         }
-        String compilerCompliance = javaProject.getOption(JavaCore.COMPILER_COMPLIANCE, false);
+        String compilerCompliance = JavaUtils.getProjectJavaVersion();
         // clear compliance settings from project
         Set<String> keySet = projectComplianceOptions.keySet();
         for (String key : keySet) {
             javaProject.setOption(key, null);
         }
-
-        IEclipsePreferences pluginPreferences = InstanceScope.INSTANCE.getNode(DesignerMavenPlugin.PLUGIN_ID);
-        boolean isAlreadySetEclipsePreferences = pluginPreferences.getBoolean(IS_ALREADY_SET_ECLIPSE_COMPLIANCE, false);
-        // if already setted them, then can't modify them anymore since user can customize them.
-        if (!isAlreadySetEclipsePreferences) {
-            pluginPreferences.putBoolean(IS_ALREADY_SET_ECLIPSE_COMPLIANCE, true);
-            if (compilerCompliance != null) {
-                IEclipsePreferences eclipsePreferences = InstanceScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
-                // set compliance settings to Eclipse
-                Map<String, String> complianceOptions = new HashMap<String, String>();
-                JavaCore.setComplianceOptions(compilerCompliance, complianceOptions);
-                if (!complianceOptions.isEmpty()) {
-                    Set<Entry<String, String>> entrySet = complianceOptions.entrySet();
-                    for (Entry<String, String> entry : entrySet) {
-                        eclipsePreferences.put(entry.getKey(), entry.getValue());
-                    }
+        if (compilerCompliance != null) {
+            IEclipsePreferences eclipsePreferences = InstanceScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
+            // set compliance settings to Eclipse
+            Map<String, String> complianceOptions = new HashMap<String, String>();
+            JavaCore.setComplianceOptions(compilerCompliance, complianceOptions);
+            if (!complianceOptions.isEmpty()) {
+                Set<Entry<String, String>> entrySet = complianceOptions.entrySet();
+                for (Entry<String, String> entry : entrySet) {
+                    eclipsePreferences.put(entry.getKey(), entry.getValue());
                 }
-                try {
-                    // save changes
-                    eclipsePreferences.flush();
-                    pluginPreferences.flush();
-                } catch (BackingStoreException e) {
-                    ExceptionHandler.process(e);
-                }
+            }
+            try {
+                // save changes
+                eclipsePreferences.flush();
+            } catch (BackingStoreException e) {
+                ExceptionHandler.process(e);
             }
         }
     }
