@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.internal.IMavenConstants;
 import org.talend.designer.maven.model.TalendMavenConstants;
 import org.talend.designer.maven.tools.creator.CreateMavenCodeProject;
@@ -124,5 +125,14 @@ public final class TalendCodeProjectUtil {
     // IMarker[] findMarkers = file.findMarkers(IMavenConstants.MARKER_CONFIGURATION_ID, true, IResource.DEPTH_ONE);
     // return findMarkers;
     // }
+    
+    public static void updateMavenProject(IProgressMonitor monitor, IProject project) throws CoreException {
+        MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(project, monitor);
+
+        // async way
+        // MavenUpdateRequest mavenUpdateRequest = new MavenUpdateRequest(project, true, false);
+        // MavenPlugin.getMavenProjectRegistry().refresh(mavenUpdateRequest);
+
+    }
 
 }
