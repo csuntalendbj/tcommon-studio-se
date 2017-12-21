@@ -345,6 +345,12 @@ public class LastGenerationInfo {
         String key = jobId + "_" + jobVersion; //$NON-NLS-1$
         pigudfNeededWithSubjobPerJob.put(key, new HashSet<String>(modulesNeeded));
     }
+    
+    public void clearModulesNeededWithSubjobPerJob() {
+        if (!modulesNeededWithSubjobPerJob.isEmpty()) {
+            modulesNeededWithSubjobPerJob.clear();
+        }
+    }
 
     public void clean() {
         modulesNeededPerJob.clear();
