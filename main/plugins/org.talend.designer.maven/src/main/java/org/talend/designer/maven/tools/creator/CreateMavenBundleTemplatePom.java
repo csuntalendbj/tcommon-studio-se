@@ -177,7 +177,7 @@ public class CreateMavenBundleTemplatePom extends CreateMaven {
     }
     
     protected void executeRepositoryWorkUnit() {
-        RepositoryWorkUnit workUnit = new RepositoryWorkUnit<Object>("Creat/update pom/assembly/templates in job/code project") { //$NON-NLS-1$
+        RepositoryWorkUnit workUnit = new RepositoryWorkUnit<Object>("Create/update pom/assembly/templates in job/code project") { //$NON-NLS-1$
 
             @Override
             protected void run() {
