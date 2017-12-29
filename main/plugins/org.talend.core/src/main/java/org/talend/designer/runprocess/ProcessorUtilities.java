@@ -1679,6 +1679,14 @@ public class ProcessorUtilities {
         processor.setOldBuildJob(oldBuildJob);
         return processor.getCommandLine(needContext, externalUse, statisticPort, tracePort, codeOptions);
     }
+    
+    public static String[] getCommandLine(boolean oldBuildJob, String targetPlatform, boolean externalUse,
+            IProcessor processor, Property property, String contextName, boolean needContext, int statisticPort,
+            int tracePort, String... codeOptions) throws ProcessorException {
+        processor.setTargetPlatform(targetPlatform);
+        processor.setOldBuildJob(oldBuildJob);
+        return processor.getCommandLine(needContext, externalUse, statisticPort, tracePort, codeOptions);
+    }
 
     /**
      *

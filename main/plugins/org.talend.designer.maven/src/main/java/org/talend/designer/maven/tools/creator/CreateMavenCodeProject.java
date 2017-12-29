@@ -59,6 +59,7 @@ import org.talend.core.model.general.TalendJobNature;
 import org.talend.core.runtime.projectsetting.IProjectSettingTemplateConstants;
 import org.talend.designer.maven.model.MavenSystemFolders;
 import org.talend.designer.maven.model.ProjectSystemFolder;
+import org.talend.designer.maven.model.TalendJavaProjectConstants;
 import org.talend.designer.maven.model.TalendMavenConstants;
 import org.talend.designer.maven.template.MavenTemplateManager;
 import org.talend.designer.maven.utils.PomIdsHelper;
@@ -94,7 +95,7 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         Model templateModel = new Model();
         templateModel.setModelVersion("4.0.0"); //$NON-NLS-1$
         templateModel.setGroupId(PomIdsHelper.getJobGroupId(project.getName()));
-        templateModel.setArtifactId("talend"); //$NON-NLS-1$
+        templateModel.setArtifactId(TalendJavaProjectConstants.TEMP_POM_ARTIFACT_ID);
         templateModel.setVersion(PomIdsHelper.getProjectVersion());
         templateModel.setPackaging(TalendMavenConstants.PACKAGING_JAR);
         return templateModel;
@@ -152,6 +153,7 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         }
         addTalendNature(p, TalendJobNature.ID, monitor);
         // convertJavaProjectToPom(monitor, p);
+        // AggregatorPomsHelper.addToParentModules(pomFile);
         changeClasspath(monitor, p);
 
         IJavaProject javaProject = JavaCore.create(p);

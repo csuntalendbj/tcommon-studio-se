@@ -155,4 +155,8 @@ public interface ITalendProcessJavaProject {
      */
     void regenerateMainProjectPom(IProgressMonitor monitor) throws Exception;
 
+    boolean isUseTempPom();
+
+    void setUseTempPom(boolean useTempPom);
+
 }

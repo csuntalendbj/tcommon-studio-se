@@ -768,11 +768,16 @@ public class PomUtil {
     }
     
     public static void updatePomDependenciesFromProcessor(IProcessor processor) throws Exception {
+        // .Java project
         IFile pomFile = processor.getTalendJavaProject().getProjectPom();
         // add routines dependency
         Model model = MODEL_MANAGER.readMavenModel(pomFile);
-        final List<Dependency> dependencies = model.getDependencies();
-        dependencies.clear();
+        List<Dependency> dependencies = model.getDependencies();
+        if (dependencies == null) {
+            dependencies = new ArrayList<>();
+        } else {
+            dependencies.clear();
+        }
         String projectTechName = ProjectManager.getInstance().getCurrentProject().getTechnicalLabel();
         String codeVersion = PomIdsHelper.getCodesVersion();
         String routinesGroupId = PomIdsHelper.getCodesGroupId(projectTechName, TalendMavenConstants.DEFAULT_CODE);

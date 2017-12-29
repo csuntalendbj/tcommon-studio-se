@@ -128,7 +128,7 @@ public final class TalendCodeProjectUtil {
     
     public static void updateMavenProject(IProgressMonitor monitor, IProject project) throws CoreException {
         MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(project, monitor);
-
+        CreateMavenCodeProject.changeClasspath(monitor, project);
         // async way
         // MavenUpdateRequest mavenUpdateRequest = new MavenUpdateRequest(project, true, false);
         // MavenPlugin.getMavenProjectRegistry().refresh(mavenUpdateRequest);

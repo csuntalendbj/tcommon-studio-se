@@ -211,10 +211,6 @@ public interface IRunProcessService extends IService {
 
     ITalendProcessJavaProject getTalendJobJavaProject(Property property);
 
-    ITalendProcessJavaProject getExistingTalendJobJavaProject(String id, String version);
-
-    void deleteAllVersionTalendJobProject(String id);
-
     ITalendProcessJavaProject getTempJavaProject();
 
     void deleteEclipseProjects();
