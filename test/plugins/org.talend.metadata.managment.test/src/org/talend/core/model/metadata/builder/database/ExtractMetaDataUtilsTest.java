@@ -3,9 +3,14 @@
  */
 package org.talend.core.model.metadata.builder.database;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -31,7 +36,6 @@ import org.talend.core.model.metadata.IMetadataConnection;
 import org.talend.core.model.metadata.builder.connection.ConnectionFactory;
 import org.talend.core.model.metadata.builder.connection.DatabaseConnection;
 import org.talend.core.model.metadata.builder.connection.MetadataColumn;
-
 import orgomg.cwm.objectmodel.core.Expression;
 
 /**
@@ -186,6 +190,8 @@ public class ExtractMetaDataUtilsTest {
         neededList.add(EDatabaseTypeName.TERADATA); // need isSqlMode
         neededList.add(EDatabaseTypeName.SAS);
         neededList.add(EDatabaseTypeName.AS400);
+        neededList.add(EDatabaseTypeName.EXASOL);
+        neededList.add(EDatabaseTypeName.SAPHana);
         return neededList;
     }
 
@@ -376,27 +382,6 @@ public class ExtractMetaDataUtilsTest {
                 }
             }
         }
-    }
-
-    @Test
-    public void testNeedFakeDatabaseMetaData() {
-        // test null type
-        Assert.assertFalse(extractMetaManger.needFakeDatabaseMetaData(null, false));
-
-        //
-        List<EDatabaseTypeName> neededList = getNeedFakeTypes();
-        for (EDatabaseTypeName type : neededList) {
-            Assert.assertTrue(extractMetaManger.needFakeDatabaseMetaData(type.getXmlName(), true));
-        }
-        // special for TERADATA
-        Assert.assertFalse(extractMetaManger.needFakeDatabaseMetaData(EDatabaseTypeName.TERADATA.getXmlName(), false));
-
-        for (EDatabaseTypeName type : EDatabaseTypeName.values()) {
-            if (!neededList.contains(type)) {
-                Assert.assertFalse(extractMetaManger.needFakeDatabaseMetaData(type.getXmlName(), false));
-            }
-        }
-
     }
 
     @Test
