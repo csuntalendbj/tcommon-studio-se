@@ -157,13 +157,15 @@ public class ProcessorDependenciesManager {
         if (GlobalServiceRegister.getDefault().isServiceRegistered(ITestContainerProviderService.class)) {
             testContainerService = (ITestContainerProviderService) GlobalServiceRegister.getDefault()
                     .getService(ITestContainerProviderService.class);
-            boolean isTestCase = testContainerService.isTestContainerItem(item);
-            if (isTestCase) {
-                item = (ProcessItem) testContainerService.getParentJobItem(item);
-            }
-            testContainers = testContainerService.getAllTestContainers(item);
-            if (testContainers != null && !testContainers.isEmpty()) {
-                hasTestCase = true;
+            if (item != null) {
+                boolean isTestCase = testContainerService.isTestContainerItem(item);
+                if (isTestCase) {
+                    item = (ProcessItem) testContainerService.getParentJobItem(item);
+                }
+                testContainers = testContainerService.getAllTestContainers(item);
+                if (testContainers != null && !testContainers.isEmpty()) {
+                    hasTestCase = true;
+                }
             }
         }
         if (hasTestCase) {
