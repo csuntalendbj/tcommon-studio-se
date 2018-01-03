@@ -74,6 +74,7 @@ import org.talend.core.nexus.TalendMavenResolver;
 import org.talend.core.runtime.maven.MavenArtifact;
 import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.maven.MavenUrlHelper;
+import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.core.ui.branding.IBrandingService;
 import org.talend.designer.maven.model.TalendMavenConstants;
 import org.talend.designer.maven.template.MavenTemplateManager;
@@ -789,6 +790,44 @@ public class PomUtil {
         manager.updateDependencies(null, model);
         
         savePom(null, model, pomFile);
+    }
+
+    public static void backupPomFile(ITalendProcessJavaProject talendProject) {
+        IProject project = talendProject.getProject();
+        IFile backFile = project.getFile(TalendMavenConstants.POM_BACKUP_FILE_NAME);
+        IFile pomFile = project.getFile(TalendMavenConstants.POM_FILE_NAME);
+        try {
+            if (backFile.exists()) {
+                backFile.delete(true, false, null);
+            }
+            pomFile.copy(backFile.getFullPath(), true, null);
+        } catch (CoreException e) {
+            ExceptionHandler.process(e);
+        }
+    }
+
+    public static void restorePomFile(ITalendProcessJavaProject talendProject) {
+        IProject project = talendProject.getProject();
+        IFile backFile = project.getFile(TalendMavenConstants.POM_BACKUP_FILE_NAME);
+        IFile pomFile = project.getFile(TalendMavenConstants.POM_FILE_NAME);
+        try {
+            if (backFile.exists()) {
+                if (pomFile.exists()) {
+                    pomFile.delete(true, false, null);
+                }
+                backFile.copy(pomFile.getFullPath(), true, null);
+            }
+        } catch (CoreException e) {
+            ExceptionHandler.process(e);
+        } finally {
+            try {
+                if (backFile.exists()) {
+                    backFile.delete(true, false, null);
+                }
+            } catch (CoreException e) {
+                //
+            }
+        }
     }
 
 }

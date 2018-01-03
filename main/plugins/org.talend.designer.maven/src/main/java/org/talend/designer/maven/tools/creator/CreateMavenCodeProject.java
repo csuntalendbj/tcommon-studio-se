@@ -192,8 +192,6 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
 
         afterCreate(subMonitor, p);
 
-        executeRepositoryWorkUnit();
-
         project = p;
 
         subMonitor.done();

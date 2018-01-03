@@ -165,7 +165,6 @@ public class CreateMavenBundleTemplatePom extends CreateMaven {
 
         afterCreate(monitor);
 
-        executeRepositoryWorkUnit();
     }
 
     protected void checkCreatingFile(IProgressMonitor monitor, IFile currentFile) throws Exception {
@@ -176,20 +175,4 @@ public class CreateMavenBundleTemplatePom extends CreateMaven {
         // nothing to do
     }
     
-    protected void executeRepositoryWorkUnit() {
-        RepositoryWorkUnit workUnit = new RepositoryWorkUnit<Object>("Create/update pom/assembly/templates in job/code project") { //$NON-NLS-1$
-
-            @Override
-            protected void run() {
-                // do nothing.
-            }
-        };
-        workUnit.setAvoidUnloadResources(true);
-        workUnit.setFilesModifiedOutsideOfRWU(true);
-        if (GlobalServiceRegister.getDefault().isServiceRegistered(IRepositoryService.class)) {
-            IRepositoryService repositoryService = (IRepositoryService) GlobalServiceRegister.getDefault().getService(IRepositoryService.class);
-            repositoryService.getProxyRepositoryFactory().executeRepositoryWorkUnit(workUnit);
-        }
-    }
-
 }

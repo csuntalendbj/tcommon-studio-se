@@ -37,6 +37,8 @@ public interface TalendMavenConstants {
 
     static final String POM_FILE_NAME = IMavenConstants.POM_FILE_NAME; // POM_NAME+XML_EXT
 
+    static final String POM_BACKUP_FILE_NAME = POM_FILE_NAME + ".bak"; //$NON-NLS-1$
+
     static final String ASSEMBLY_NAME = "assembly";
 
     static final String ASSEMBLY_FILE_NAME = IProjectSettingTemplateConstants.ASSEMBLY_FILE_NAME;
