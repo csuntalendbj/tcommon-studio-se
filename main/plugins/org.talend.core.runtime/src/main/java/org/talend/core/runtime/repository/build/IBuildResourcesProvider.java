@@ -12,17 +12,14 @@
 // ============================================================================
 package org.talend.core.runtime.repository.build;
 
+import java.util.Map;
+
+import org.eclipse.core.runtime.IProgressMonitor;
+
 /**
  * DOC ggu class global comment. Detailled comment
  */
-class BuildProviderRegistry extends BuildExtensionRegistry {
+public interface IBuildResourcesProvider extends IBuildResourceParametes {
 
-    AbstractBuildProvider provider;
-
-    int getOrder() {
-        if (provider.buildType != null) {
-            return provider.getBuildType().order;
-        }
-        return 0;
-    }
+    void prepare(IProgressMonitor monitor, Map<String, Object> parameters) throws Exception;
 }

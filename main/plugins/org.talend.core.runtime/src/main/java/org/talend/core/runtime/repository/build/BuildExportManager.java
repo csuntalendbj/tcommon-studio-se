@@ -94,6 +94,10 @@ public/* final */class BuildExportManager {
         return reader.getBuildProviders();
     }
 
+    public IBuildResourcesProvider[] getResourcesProviders() {
+        return reader.getResourcesProviders();
+    }
+
     public BuildType[] getValidBuildTypes(Map<String, Object> parameters) {
         List<BuildType> validBuildTypes = new ArrayList<BuildType>();
         final AbstractBuildProvider[] buildProviders = getAllBuildProviders();

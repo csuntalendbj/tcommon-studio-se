@@ -23,10 +23,16 @@ import org.talend.designer.runprocess.IProcessor;
  */
 public interface IBuildJobHandler extends IBuildExportHandler {
 
+    /**
+     * @Deprecated move into prepare
+     */
     public IProcessor generateJobFiles(IProgressMonitor monitor) throws Exception;
 
     public void generateTestReports(IProgressMonitor monitor) throws Exception;
 
+    /**
+     * @Deprecated move into prepare
+     */
     public void generateItemFiles(boolean withDependencies, IProgressMonitor monitor) throws Exception;
 
     public IFile getJobTargetFile();

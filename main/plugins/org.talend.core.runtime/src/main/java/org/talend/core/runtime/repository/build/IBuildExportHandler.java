@@ -23,5 +23,8 @@ public interface IBuildExportHandler {
 
     Map<String, Object> getArguments();
 
+    void prepare(IProgressMonitor monitor, Map<String, Object> parameters) throws Exception;
+
     void build(IProgressMonitor monitor) throws Exception;
+
 }
