@@ -41,6 +41,7 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.utils.generation.JavaUtils;
 import org.talend.designer.maven.model.MavenSystemFolders;
+import org.talend.designer.maven.model.TalendMavenConstants;
 
 /**
  * DOC zwxue class global comment. Detailled comment
@@ -83,10 +84,17 @@ public class MavenProjectUtils {
         // async way
         // MavenUpdateRequest mavenUpdateRequest = new MavenUpdateRequest(project, true, false);
         // MavenPlugin.getMavenProjectRegistry().refresh(mavenUpdateRequest);
-
+        if (project.getName().equals(TalendMavenConstants.PROJECT_NAME)) {
+            // do not update .Java project.
+            return;
+        }
         MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(project, monitor);
 
         changeClasspath(monitor, project);
+        
+        // only need this when pom has no parent.
+        // IJavaProject javaProject = JavaCore.create(project);
+        // clearProjectIndenpendComplianceSettings(javaProject);
     }
 
     public static void changeClasspath(IProgressMonitor monitor, IProject p) {

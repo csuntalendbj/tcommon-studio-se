@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.m2e.core.internal.IMavenConstants;
+import org.talend.core.model.general.TalendJobNature;
 import org.talend.designer.maven.model.TalendMavenConstants;
 import org.talend.designer.maven.tools.creator.CreateMavenCodeProject;
 
@@ -46,7 +47,7 @@ public final class TalendCodeProjectUtil {
                 }
                 codeProject.delete(true, true, monitor);
             }
-            CreateMavenCodeProject createProject = new CreateMavenCodeProject(codeProject){
+            CreateMavenCodeProject createProject = new CreateMavenCodeProject(codeProject, true) {
 
                 @Override
                 protected Model createModel() {
@@ -56,10 +57,19 @@ public final class TalendCodeProjectUtil {
                     templateModel.setArtifactId(TalendMavenConstants.PROJECT_NAME);
                     templateModel.setVersion(PomIdsHelper.getProjectVersion());
                     templateModel.setPackaging(TalendMavenConstants.PACKAGING_JAR);
-                    
+
                     return templateModel;
                 }
-                
+
+                @Override
+                protected void afterCreate(IProgressMonitor monitor, IResource res) throws Exception {
+                    IProject p = res.getProject();
+                    if (!p.isOpen()) {
+                        p.open(monitor);
+                    }
+                    addTalendNature(p, TalendJobNature.ID, monitor);
+                }
+
             };
             createProject.setProjectLocation(root.getLocation().append(TalendMavenConstants.PROJECT_NAME));
             createProject.create(monitor);
