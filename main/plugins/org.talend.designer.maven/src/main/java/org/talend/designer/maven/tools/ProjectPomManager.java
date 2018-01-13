@@ -69,8 +69,12 @@ public class ProjectPomManager {
         if (monitor == null) {
             monitor = new NullProgressMonitor();
         }
+        Model projectModel = MODEL_MANAGER.readMavenModel(projectPomFile);
         Model templateModel = MavenTemplateManager.getCodeProjectTemplateModel();
-
+        for (String module : projectModel.getModules()) {
+            templateModel.addModule(module);
+        }
+ 
         PomUtil.savePom(monitor, templateModel, projectPomFile);
     }
 

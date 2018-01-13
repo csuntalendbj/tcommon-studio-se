@@ -25,8 +25,10 @@ import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
+import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -35,6 +37,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.m2e.core.MavenPlugin;
+import org.talend.commons.exception.ExceptionHandler;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.general.Project;
 import org.talend.core.model.properties.Property;
@@ -54,6 +57,7 @@ import org.talend.designer.maven.tools.creator.CreateMavenRoutinePom;
 import org.talend.designer.maven.utils.PomIdsHelper;
 import org.talend.designer.maven.utils.PomUtil;
 import org.talend.repository.ProjectManager;
+import org.talend.repository.model.RepositoryConstants;
 
 /**
  * DOC zwxue class global comment. Detailled comment
@@ -163,10 +167,10 @@ public class AggregatorPomsHelper {
     }
 
     public static void addToParentModules(IFile pomFile) throws Exception {
-        File parentPom = getParentModulePomFile(pomFile);
+        IFile parentPom = getParentModulePomFile(pomFile);
         if (parentPom != null) {
-            IPath relativePath = pomFile.getLocation().makeRelativeTo(new Path(parentPom.getParentFile().getAbsolutePath()));
-            Model model = MavenPlugin.getMaven().readModel(parentPom);
+            IPath relativePath = pomFile.getParent().getLocation().makeRelativeTo(parentPom.getParent().getLocation());
+            Model model = MavenPlugin.getMaven().readModel(parentPom.getContents());
             List<String> modules = model.getModules();
             if (modules == null) {
                 modules = new ArrayList<>();
@@ -180,10 +184,10 @@ public class AggregatorPomsHelper {
     }
 
     public static void removeFromParentModules(IFile pomFile) throws Exception {
-        File parentPom = getParentModulePomFile(pomFile);
+        IFile parentPom = getParentModulePomFile(pomFile);
         if (parentPom != null) {
-            IPath relativePath = pomFile.getLocation().makeRelativeTo(new Path(parentPom.getParentFile().getAbsolutePath()));
-            Model model = MavenPlugin.getMaven().readModel(parentPom);
+            IPath relativePath = pomFile.getParent().getLocation().makeRelativeTo(parentPom.getParent().getLocation());
+            Model model = MavenPlugin.getMaven().readModel(parentPom.getContents());
             List<String> modules = model.getModules();
             if (modules == null) {
                 modules = new ArrayList<>();
@@ -196,8 +200,8 @@ public class AggregatorPomsHelper {
         }
     }
 
-    private static File getParentModulePomFile(IFile pomFile) {
-        File parentPom = null;
+    private static IFile getParentModulePomFile(IFile pomFile) {
+        IFile parentPom = null;
         if (pomFile == null || pomFile.getParent() == null || pomFile.getParent().getParent() == null) {
             return null;
         }
@@ -205,17 +209,26 @@ public class AggregatorPomsHelper {
             // ignore .Java project
             return null;
         }
-        File pom = pomFile.getLocation().toFile();
-        File parentPomFolder = null;
-        if (pom.getParentFile() != null) {
-            parentPomFolder = pom.getParentFile().getParentFile();
+        IContainer parentPomFolder = pomFile.getParent();
+        int nb=10;
+        while(parentPomFolder != null && !parentPomFolder.getName().equals(RepositoryConstants.POMS_DIRECTORY)) {
+            parentPomFolder = parentPomFolder.getParent();
+            nb--;
+            if (nb <0) {
+                // only to avoid infinite loop in case there is some folder issues (poms folder not found)
+                return null;
+            }
         }
         if (parentPomFolder != null) {
-            for (File file : parentPomFolder.listFiles()) {
-                if (file.getName().equals(TalendMavenConstants.POM_FILE_NAME)) {
-                    parentPom = file;
-                    break;
+            try {
+                for (IResource file : parentPomFolder.members()) {
+                    if (file.getName().equals(TalendMavenConstants.POM_FILE_NAME)) {
+                        parentPom = (IFile) file;
+                        break;
+                    }
                 }
+            } catch (CoreException e) {
+                ExceptionHandler.process(e);
             }
         }
         return parentPom;
@@ -223,8 +236,7 @@ public class AggregatorPomsHelper {
 
     public void refreshAggregatorFolderPom(IFile pomFile) throws Exception {
         boolean isModified = false;
-        File pom = pomFile.getLocation().toFile();
-        Model model = MavenPlugin.getMaven().readModel(pom);
+        Model model = MavenPlugin.getMaven().readModel(pomFile.getContents());
         List<String> modules = model.getModules();
         if (modules != null) {
             ListIterator<String> iterator = modules.listIterator();
