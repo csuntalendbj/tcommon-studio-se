@@ -12,8 +12,12 @@
 // ============================================================================
 package org.talend.core.services;
 
+import java.util.Collection;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.talend.commons.exception.PersistenceException;
 import org.talend.core.IService;
 import org.talend.core.model.general.Project;
@@ -34,6 +38,10 @@ public interface IGITProviderService extends IService {
     public boolean isGITProject(Project p) throws PersistenceException;
 
     public void gitEclipseHandlerDelete(IProject eclipseProject, Project currentProject, String filePath);
+
+    public void refreshResources(IProgressMonitor monitor, Collection<IResource> resources) throws Exception;
+
+    public void reloadDynamicDistributions(IProgressMonitor monitor) throws Exception;
 
     public void clean();
 
