@@ -51,9 +51,9 @@ public class MavenPomCommandLauncher extends MavenCommandLauncher {
             return;
         }
         // non-pom file
-        if (!TalendMavenConstants.POM_FILE_NAME.equals(launcherPomFile.getName())) {
-            return;
-        }
+        // if (!TalendMavenConstants.POM_FILE_NAME.equals(launcherPomFile.getName())) {
+        // return;
+        // }
         super.execute(monitor);
     }
 

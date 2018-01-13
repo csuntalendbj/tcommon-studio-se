@@ -25,10 +25,10 @@ import org.apache.maven.model.Model;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.MavenModelManager;
 import org.talend.commons.exception.ExceptionHandler;
@@ -202,7 +202,7 @@ public class MavenPomSynchronizer {
      * another cleaning up for sources codes or such in @see DeleteAllJobWhenStartUp.
      */
     public void cleanMavenFiles(IProgressMonitor monitor) throws Exception {
-        IJavaProject jProject = codeProject.getJavaProject();
+        IProject jProject = codeProject.getProject();
         if (!jProject.isOpen()) {
             jProject.open(monitor);
         }

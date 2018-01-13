@@ -42,6 +42,7 @@ import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.general.Project;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.repository.ERepositoryObjectType;
+import org.talend.core.repository.utils.ItemResourceUtil;
 import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.maven.MavenUrlHelper;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
@@ -296,6 +297,19 @@ public class AggregatorPomsHelper {
 
     public IFolder getProcessFolder(ERepositoryObjectType type) {
         return getProcessesFolder().getFolder(type.getFolder());
+    }
+
+    public static IPath getJobProjectPath(Property property, String realVersion) {
+        // without create/open project
+        String projectTechName = ProjectManager.getInstance().getProject(property).getTechnicalLabel();
+        Project project = ProjectManager.getInstance().getProjectFromProjectTechLabel(projectTechName);
+        String version = realVersion == null ? property.getVersion() : realVersion;
+        IPath path = ItemResourceUtil.getItemRelativePath(property);
+        IFolder processTypeFolder = new AggregatorPomsHelper(project)
+                .getProcessFolder(ERepositoryObjectType.getItemType(property.getItem()));
+        path = processTypeFolder.getLocation().append(path);
+        path = path.append(AggregatorPomsHelper.getJobProjectFolderName(property.getLabel(), version));
+        return path;
     }
 
     public static String getJobProjectName(Project project, Property property) {

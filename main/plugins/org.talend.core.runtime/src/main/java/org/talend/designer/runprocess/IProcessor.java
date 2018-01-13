@@ -316,4 +316,8 @@ public interface IProcessor {
      */
     void cleanWorkingDirectory() throws SecurityException;
 
+    void setSkipClasspathJar(boolean skipClasspathJar);
+
+    boolean isSkipClasspathJar();
+
 }

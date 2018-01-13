@@ -470,8 +470,9 @@ public class ProcessorUtilities {
             }
         }
         jobInfo.setProcessor(processor);
-        processor.cleanBeforeGenerate(TalendProcessOptionConstants.CLEAN_JAVA_CODES | TalendProcessOptionConstants.CLEAN_CONTEXTS
-                | TalendProcessOptionConstants.CLEAN_DATA_SETS);
+        // processor.cleanBeforeGenerate(TalendProcessOptionConstants.CLEAN_JAVA_CODES |
+        // TalendProcessOptionConstants.CLEAN_CONTEXTS
+        // | TalendProcessOptionConstants.CLEAN_DATA_SETS);
 
         generateJobInfo(jobInfo, isMainJob, currentProcess, selectedProcessItem);
         // pigudf
@@ -672,8 +673,8 @@ public class ProcessorUtilities {
             processor.syntaxCheck();
             
             // TDI-36930, just after compile, need check the compile errors first.
-            // for run/build job, check error when building every time, but for generate code, only check when main job build.
-            if (isMainJob || !BitwiseOptionUtils.containOption(option, GENERATE_MAIN_ONLY)) {
+            // only check current build
+            if (isMainJob) {
                 CorePlugin.getDefault().getRunProcessService().checkLastGenerationHasCompilationError(true);
             }
         }
@@ -859,8 +860,8 @@ public class ProcessorUtilities {
             } else {
                 processor = getProcessor(currentProcess, selectedProcessItem.getProperty());
             }
-            processor.cleanBeforeGenerate(TalendProcessOptionConstants.CLEAN_JAVA_CODES
-                    | TalendProcessOptionConstants.CLEAN_CONTEXTS | TalendProcessOptionConstants.CLEAN_DATA_SETS);
+            // processor.cleanBeforeGenerate(TalendProcessOptionConstants.CLEAN_JAVA_CODES
+            // | TalendProcessOptionConstants.CLEAN_CONTEXTS | TalendProcessOptionConstants.CLEAN_DATA_SETS);
             jobInfo.setProcessor(processor);
             if (!timerStarted) {
                 idTimer = "generateCode for job: " + currentProcess.getName();
@@ -1577,15 +1578,30 @@ public class ProcessorUtilities {
     }
 
     /**
-     *
-     * Seems only work for jet code generator.
-     */
+    *
+    * jet code generator to get original classpath
+    */
     public static String[] getCommandLine(String targetPlatform, boolean externalUse, String processId, String contextName,
+            int statisticPort, int tracePort, String... codeOptions) throws ProcessorException {
+        return getCommandLine(targetPlatform, true, externalUse, processId, contextName, statisticPort, tracePort, codeOptions);
+    }
+
+    /**
+    *
+    * jet code generator to especially for tRunJob to get classpath with classpath.jar
+    */
+    public static String[] getCommandLine(String targetPlatform, boolean skipClasspathJar, boolean externalUse, String processId, String contextName,
             int statisticPort, int tracePort, String... codeOptions) throws ProcessorException {
 
         IProcessor processor = findProcessorFromJobList(processId, contextName, null);
         if (processor != null && targetPlatform.equals(processor.getTargetPlatform())) {
-            return processor.getCommandLine(true, externalUse, statisticPort, tracePort, codeOptions);
+            boolean oldSkipClasspathJar = processor.isSkipClasspathJar();
+            processor.setSkipClasspathJar(skipClasspathJar);
+            try {
+                return processor.getCommandLine(true, externalUse, statisticPort, tracePort, codeOptions);
+            } finally {
+                processor.setSkipClasspathJar(oldSkipClasspathJar);
+            }
         }
 
         ProcessItem selectedProcessItem = ItemCacheManager.getProcessItem(processId);
@@ -1599,7 +1615,7 @@ public class ProcessorUtilities {
             return new String[] {};
         }
         // because all jobs are based one new way, set the flag "oldBuildJob" to false.
-        return getCommandLine(false, targetPlatform, externalUse, process, selectedProcessItem.getProperty(), contextName, true,
+        return getCommandLine(false, skipClasspathJar, targetPlatform, externalUse, process, selectedProcessItem.getProperty(), contextName, true,
                 statisticPort, tracePort, codeOptions);
     }
 
@@ -1666,6 +1682,12 @@ public class ProcessorUtilities {
     public static String[] getCommandLine(boolean oldBuildJob, String targetPlatform, boolean externalUse,
             IProcess currentProcess, Property property, String contextName, boolean needContext, int statisticPort,
             int tracePort, String... codeOptions) throws ProcessorException {
+        return getCommandLine(oldBuildJob, false, targetPlatform, externalUse, currentProcess, property, contextName, needContext, statisticPort, tracePort, codeOptions);
+    }
+
+    public static String[] getCommandLine(boolean oldBuildJob, boolean skipClasspathJar, String targetPlatform, boolean externalUse,
+            IProcess currentProcess, Property property, String contextName, boolean needContext, int statisticPort,
+            int tracePort, String... codeOptions) throws ProcessorException {
         if (currentProcess == null) {
             return new String[] {};
         }
@@ -1675,6 +1697,7 @@ public class ProcessorUtilities {
         }
         IContext currentContext = getContext(currentProcess, contextName);
         IProcessor processor = getProcessor(currentProcess, curProperty, currentContext);
+        processor.setSkipClasspathJar(skipClasspathJar);
         processor.setTargetPlatform(targetPlatform);
         processor.setOldBuildJob(oldBuildJob);
         return processor.getCommandLine(needContext, externalUse, statisticPort, tracePort, codeOptions);

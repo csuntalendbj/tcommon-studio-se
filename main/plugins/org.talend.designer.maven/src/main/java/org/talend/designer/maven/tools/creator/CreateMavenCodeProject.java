@@ -13,15 +13,9 @@
 package org.talend.designer.maven.tools.creator;
 
 import java.io.File;
-import java.io.FileFilter;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.maven.model.Model;
 import org.apache.maven.project.MavenProject;
@@ -37,24 +31,12 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.core.runtime.preferences.IEclipsePreferences;
-import org.eclipse.core.runtime.preferences.InstanceScope;
-import org.eclipse.jdt.core.IClasspathAttribute;
-import org.eclipse.jdt.core.IClasspathEntry;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.internal.core.ClasspathAttribute;
-import org.eclipse.jdt.launching.JavaRuntime;
 import org.eclipse.m2e.core.MavenPlugin;
-import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.embedder.MavenModelManager;
 import org.eclipse.m2e.core.internal.Messages;
 import org.eclipse.m2e.core.internal.project.ProjectConfigurationManager;
-import org.eclipse.m2e.core.project.ProjectImportConfiguration;
 import org.eclipse.osgi.util.NLS;
-import org.osgi.service.prefs.BackingStoreException;
 import org.talend.commons.exception.ExceptionHandler;
-import org.talend.commons.utils.generation.JavaUtils;
 import org.talend.core.model.general.TalendJobNature;
 import org.talend.core.runtime.projectsetting.IProjectSettingTemplateConstants;
 import org.talend.designer.maven.model.MavenSystemFolders;
@@ -63,6 +45,7 @@ import org.talend.designer.maven.model.TalendJavaProjectConstants;
 import org.talend.designer.maven.model.TalendMavenConstants;
 import org.talend.designer.maven.template.MavenTemplateManager;
 import org.talend.designer.maven.tools.AggregatorPomsHelper;
+import org.talend.designer.maven.utils.MavenProjectUtils;
 import org.talend.designer.maven.utils.PomIdsHelper;
 import org.talend.designer.maven.utils.PomUtil;
 
@@ -80,10 +63,17 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
 
     private IPath location;
 
+    private boolean enbleMavenNature;
+
     public CreateMavenCodeProject(IProject project) {
+        this(project, true);
+    }
+
+    public CreateMavenCodeProject(IProject project, boolean enbleMavenNature) {
         super(project.getFile(TalendMavenConstants.POM_FILE_NAME), IProjectSettingTemplateConstants.PROJECT_TEMPLATE_FILE_NAME);
         Assert.isNotNull(project);
         this.project = project;
+        this.enbleMavenNature = enbleMavenNature;
     }
 
     public IProject getProject() {
@@ -117,13 +107,6 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
 
     public void setPomFile(IFile pomFile) {
         this.pomFile = pomFile;
-        if (pomFile.exists()) {
-            try {
-                AggregatorPomsHelper.addToParentModules(pomFile);
-            } catch (Exception e) {
-                ExceptionHandler.process(e);
-            }
-        }
     }
 
     /**
@@ -147,7 +130,7 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
      * can do something before create operation.
      */
     protected void beforeCreate(IProgressMonitor monitor, IResource res) throws Exception {
-        cleanLastUpdatedFiles();
+        //
     }
 
     /**
@@ -162,12 +145,6 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         addTalendNature(p, TalendJobNature.ID, monitor);
         // convertJavaProjectToPom(monitor, p);
         AggregatorPomsHelper.addToParentModules(pomFile);
-        changeClasspath(monitor, p);
-
-        IJavaProject javaProject = JavaCore.create(p);
-        clearProjectIndenpendComplianceSettings(javaProject);
-        // unregist listeners, release resources
-        javaProject.close();
     }
 
     @Override
@@ -178,23 +155,13 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         }
         IProgressMonitor subMonitor = new SubProgressMonitor(pMoniter, 100);
 
-        Model model;
-        // if (pomFile.exists()) {
-        // model = MavenPlugin.getMavenModelManager().readMavenModel(pomFile);
-        // } else {
-        // // first time create, use temp model.
-        // }
-        // always use temp model to avoid classpath problem?
-        model = createModel();
-
-        final ProjectImportConfiguration importConfiguration = new ProjectImportConfiguration();
         IProject p = ResourcesPlugin.getWorkspace().getRoot().getProject(project.getName());
+
         beforeCreate(subMonitor, p);
 
         subMonitor.worked(10);
 
-        createSimpleProject(subMonitor, p, model, importConfiguration);
-        // MavenPlugin.getProjectConversionManager().convert(project, model, subMonitor);
+        createSimpleProject(subMonitor, p);
 
         subMonitor.worked(80);
 
@@ -248,153 +215,9 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         }
     }
 
-    public static void changeClasspath(IProgressMonitor monitor, IProject p) {
-        try {
-            IJavaProject javaProject = JavaCore.create(p);
-            IClasspathEntry[] rawClasspathEntries = javaProject.getRawClasspath();
-            boolean changed = false;
-            boolean foundResources = false;
-
-            for (int index = 0; index < rawClasspathEntries.length; index++) {
-                IClasspathEntry entry = rawClasspathEntries[index];
-
-                IClasspathEntry newEntry = null;
-                if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-                    IPath path = entry.getPath();
-                    if (p.getFullPath().isPrefixOf(path)) {
-                        path = path.removeFirstSegments(1);
-                    }
-
-                    // src/main/resources, in order to removing the 'excluding="**"'.
-                    if (MavenSystemFolders.RESOURCES.getPath().equals(path.toString())) {
-                        foundResources = true;
-                        newEntry = JavaCore.newSourceEntry(entry.getPath(), new IPath[0], new IPath[0], //
-                                entry.getOutputLocation(), entry.getExtraAttributes());
-                    }
-
-                    // src/test/resources, in order to removing the 'excluding="**"'.
-                    if (MavenSystemFolders.RESOURCES_TEST.getPath().equals(path.toString())) {
-                        newEntry = JavaCore.newSourceEntry(entry.getPath(), new IPath[0], new IPath[0], //
-                                entry.getOutputLocation(), entry.getExtraAttributes());
-                    }
-
-                } else if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
-                    // remove the special version of jre in container.
-                    IPath defaultJREContainerPath = JavaRuntime.newDefaultJREContainerPath();
-                    if (defaultJREContainerPath.isPrefixOf(entry.getPath())) {
-                        // JavaRuntime.getDefaultJREContainerEntry(); //missing properties
-                        newEntry = JavaCore.newContainerEntry(defaultJREContainerPath, entry.getAccessRules(),
-                                entry.getExtraAttributes(), entry.isExported());
-                    }
-                }
-                if (newEntry != null) {
-                    rawClasspathEntries[index] = newEntry;
-                    changed = true;
-                }
-
-            }
-            if (!foundResources) {
-                List<IClasspathEntry> list = new LinkedList<>(Arrays.asList(rawClasspathEntries));
-                IFolder resources = p.getFolder("src/main/resources");
-                IFolder output = p.getFolder("target/classes");
-                ClasspathAttribute attribute = new ClasspathAttribute("maven.pomderived", Boolean.TRUE.toString());
-                IClasspathEntry newEntry = JavaCore.newSourceEntry(resources.getFullPath(), new IPath[0], new IPath[0],
-                        output.getFullPath(), new IClasspathAttribute[] { attribute });
-                list.add(1, newEntry);
-                rawClasspathEntries = list.toArray(new IClasspathEntry[] {});
-                changed = true;
-            }
-            if (changed) {
-                javaProject.setRawClasspath(rawClasspathEntries, monitor);
-            }
-        } catch (CoreException e) {
-            ExceptionHandler.process(e);
-        }
-    }
-
-    /**
-     * 
-     * FIXME, Maybe need find another way to remove the lastUpdated files. seems the
-     * MavenUpdateRequest.isForceDependencyUpdate is not useful when create this .Java project.
-     */
-    private void cleanLastUpdatedFiles() {
-        final IMaven maven = MavenPlugin.getMaven();
-        String localRepositoryPath = maven.getLocalRepositoryPath();
-        if (localRepositoryPath == null) {
-            return;
-        }
-        File localRepoFolder = new File(localRepositoryPath);
-        cleanLastUpdatedFile(localRepoFolder);
-    }
-
-    private final static FileFilter lastUpdatedFilter = new FileFilter() {
-
-        @Override
-        public boolean accept(File pathname) {
-            return pathname.isDirectory() || pathname.getName().endsWith(".lastUpdated") //$NON-NLS-1$
-                    || pathname.getName().equals("m2e-lastUpdated.properties"); //$NON-NLS-1$
-        }
-    };
-
-    private void cleanLastUpdatedFile(final File file) {
-        if (file != null && file.exists()) {
-            if (file.isDirectory()) {
-                File[] list = file.listFiles(lastUpdatedFilter);
-                if (list != null) {
-                    for (File f : list) {
-                        cleanLastUpdatedFile(f);
-                    }
-                }
-            } else if (file.isFile() && lastUpdatedFilter.accept(file)) {
-                file.delete();
-            }
-        }
-    }
-
-    /**
-     * Clear compliance settings from project, and set them into Eclipse compliance settings
-     * 
-     * @param javaProject
-     */
-    private static void clearProjectIndenpendComplianceSettings(IJavaProject javaProject) {
-
-        Map<String, String> projectComplianceOptions = javaProject.getOptions(false);
-        if (projectComplianceOptions == null || projectComplianceOptions.isEmpty()) {
-            return;
-        }
-        String compilerCompliance = JavaUtils.getProjectJavaVersion();
-        // clear compliance settings from project
-        Set<String> keySet = projectComplianceOptions.keySet();
-        for (String key : keySet) {
-            javaProject.setOption(key, null);
-        }
-        if (compilerCompliance != null) {
-            IEclipsePreferences eclipsePreferences = InstanceScope.INSTANCE.getNode(JavaCore.PLUGIN_ID);
-            // set compliance settings to Eclipse
-            Map<String, String> complianceOptions = new HashMap<String, String>();
-            JavaCore.setComplianceOptions(compilerCompliance, complianceOptions);
-            if (!complianceOptions.isEmpty()) {
-                Set<Entry<String, String>> entrySet = complianceOptions.entrySet();
-                for (Entry<String, String> entry : entrySet) {
-                    eclipsePreferences.put(entry.getKey(), entry.getValue());
-                }
-            }
-            try {
-                // save changes
-                eclipsePreferences.flush();
-            } catch (BackingStoreException e) {
-                ExceptionHandler.process(e);
-            }
-        }
-    }
-
     @SuppressWarnings("restriction")
-    private void createSimpleProject(IProgressMonitor monitor, IProject p, Model model,
-            ProjectImportConfiguration importConfiguration) throws CoreException {
+    private void createSimpleProject(IProgressMonitor monitor, IProject p) throws CoreException {
         final String[] directories = getFolders();
-
-        ProjectConfigurationManager projectConfigurationManager = (ProjectConfigurationManager) MavenPlugin
-                .getProjectConfigurationManager();
 
         String projectName = p.getName();
         monitor.beginTask(NLS.bind(Messages.ProjectConfigurationManager_task_creating, projectName), 5);
@@ -413,6 +236,8 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         monitor.subTask(Messages.ProjectConfigurationManager_task_creating_pom);
         IFile pomFile = p.getFile(TalendMavenConstants.POM_FILE_NAME);
         if (!pomFile.exists()) {
+            // always use temp model to avoid classpath problem?
+            Model model = createModel();
             MavenPlugin.getMavenModelManager().createMavenModel(pomFile, model);
         }
         monitor.worked(1);
@@ -424,7 +249,10 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         monitor.worked(1);
 
         monitor.subTask(Messages.ProjectConfigurationManager_task_creating_project);
-        projectConfigurationManager.enableMavenNature(p, importConfiguration.getResolverConfiguration(), monitor);
+
+        if (enbleMavenNature) {
+            MavenProjectUtils.enableMavenNature(monitor, p);
+        }
         monitor.worked(1);
 
         if (this.pomFile == null) {

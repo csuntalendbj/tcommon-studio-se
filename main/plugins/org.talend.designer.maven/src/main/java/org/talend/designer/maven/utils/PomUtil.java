@@ -463,22 +463,12 @@ public class PomUtil {
         return buffer.toString();
     }
     
-    public static String getRelativeClassPathOfArtifact(MavenArtifact artifact) {
-        String path = getArtifactPath(artifact);
+    public static String getAbsArtifactPathAsCP(MavenArtifact artifact) {
         String repoPath = MavenPlugin.getMaven().getLocalRepositoryPath();
-        String repoName = repoPath.substring(repoPath.lastIndexOf("/") + 1); //$NON-NLS-1$
-        path = repoName + "/" + path; //$NON-NLS-1$
-        return path;
+        String artifactPath = getArtifactPath(artifact);
+        return repoPath + "/" + artifactPath; //$NON-NLS-1$
     }
     
-    public static String getExecLocationForClassPath() {
-        File repository = new File(MavenPlugin.getMaven().getLocalRepositoryPath());
-        if (repository.exists() && repository.isDirectory()) {
-            return repository.getParentFile().getAbsolutePath();
-        }
-        return null;
-    }
-
     /**
      * Get absolute path for installed artifact
      * 
