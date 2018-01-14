@@ -21,10 +21,12 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import org.apache.maven.model.Activation;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
+import org.apache.maven.model.Profile;
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -38,7 +40,9 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.talend.commons.exception.ExceptionHandler;
+import org.talend.commons.utils.VersionUtils;
 import org.talend.core.GlobalServiceRegister;
+import org.talend.core.PluginChecker;
 import org.talend.core.model.general.Project;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.repository.ERepositoryObjectType;
@@ -125,7 +129,7 @@ public class AggregatorPomsHelper {
     }
 
     public IFolder getDeploymentsFolder() {
-        return getProjectPomsFolder().getFolder(DIR_DEPLOYMENTS);
+        return getProjectPomsFolder().getFolder(DIR_AGGREGATORS);
     }
 
     public static void updateCodeProjectPom(IProgressMonitor monitor, ERepositoryObjectType type, IFile pomFile)
@@ -263,19 +267,7 @@ public class AggregatorPomsHelper {
         model.setVersion(PomIdsHelper.getProjectVersion());
         model.setPackaging(TalendMavenConstants.PACKAGING_POM);
 
-        model.setBuild(new Build());
-        Plugin plugin = new Plugin();
-        plugin.setGroupId(TalendMavenConstants.DEFAULT_GROUP_ID);
-        plugin.setArtifactId("ci.builder"); //$NON-NLS-1$
-        plugin.setVersion("${project.version}"); //$NON-NLS-1$
-
-        List<PluginExecution> executions = new ArrayList<>();
-        PluginExecution pe = new PluginExecution();
-        pe.setPhase("generate-sources"); //$NON-NLS-1$
-        pe.addGoal("generate"); //$NON-NLS-1$
-        executions.add(pe);
-        plugin.setExecutions(executions);
-        model.getBuild().addPlugin(plugin);
+        MavenTemplateManager.addCIBuilder(model);
 
         PomUtil.savePom(null, model, pomFile);
     }

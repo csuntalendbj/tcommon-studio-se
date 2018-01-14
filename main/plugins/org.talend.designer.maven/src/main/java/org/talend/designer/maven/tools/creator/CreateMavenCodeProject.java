@@ -184,37 +184,6 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         }
     }
 
-    // TODO remove?
-    private void convertJavaProjectToPom(IProgressMonitor monitor, IProject p) {
-        IFile pomFile = p.getFile(TalendMavenConstants.POM_FILE_NAME);
-        if (pomFile.exists()) {
-            try {
-                MavenModelManager mavenModelManager = MavenPlugin.getMavenModelManager();
-                MavenProject mavenProject = mavenModelManager.readMavenProject(pomFile, monitor);
-                if (mavenProject != null) {
-                    Model model = mavenProject.getOriginalModel();
-                    // if not pom, change to pom
-                    if (!TalendMavenConstants.PACKAGING_POM.equals(model.getPackaging())) {
-
-                        Model codeProjectTemplateModel = MavenTemplateManager.getCodeProjectTemplateModel();
-                        model.setGroupId(codeProjectTemplateModel.getGroupId());
-                        model.setArtifactId(codeProjectTemplateModel.getArtifactId());
-                        model.setVersion(codeProjectTemplateModel.getVersion());
-                        model.setName(codeProjectTemplateModel.getName());
-                        model.setPackaging(codeProjectTemplateModel.getPackaging());
-
-                        PomUtil.savePom(monitor, model, pomFile);
-
-                        p.refreshLocal(IResource.DEPTH_ONE, monitor);
-                    }
-                }
-            } catch (Exception e) {
-                ExceptionHandler.process(e);
-            }
-
-        }
-    }
-
     @SuppressWarnings("restriction")
     private void createSimpleProject(IProgressMonitor monitor, IProject p) throws CoreException {
         final String[] directories = getFolders();

@@ -27,8 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.maven.model.Activation;
+import org.apache.maven.model.Build;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
+import org.apache.maven.model.PluginExecution;
+import org.apache.maven.model.Profile;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
@@ -37,7 +41,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.talend.commons.exception.ExceptionHandler;
+import org.talend.commons.utils.VersionUtils;
 import org.talend.commons.utils.generation.JavaUtils;
+import org.talend.core.PluginChecker;
 import org.talend.core.model.general.Project;
 import org.talend.core.runtime.projectsetting.IProjectSettingPreferenceConstants;
 import org.talend.core.runtime.projectsetting.IProjectSettingTemplateConstants;
@@ -213,7 +219,47 @@ public class MavenTemplateManager {
     }
 
     public static Model getCodeProjectTemplateModel() {
-        return getCodeProjectTemplateModel(null); // by default will be current project.
+        return addCIBuilder(getCodeProjectTemplateModel(null)); // by default will be current project.
+    }
+    
+    public static Model addCIBuilder(Model model) {
+        if (!PluginChecker.isTIS()) {
+            return model;
+        }
+        if (!model.getProfiles().isEmpty()) {
+            Profile toDelete = null;
+            for (Profile profile : model.getProfiles()) {
+                if ("ci-builder".equals(profile.getId())) {
+                    toDelete = profile;
+                    break;
+                }
+            }
+            if (toDelete != null) {
+                model.getProfiles().remove(toDelete);
+            }
+        }
+        Profile profile = new Profile();
+        profile.setId("ci-builder");
+        Activation activation = new Activation();
+        activation.setActiveByDefault(true);
+        profile.setActivation(activation);
+        model.addProfile(profile);
+
+        Plugin plugin = new Plugin();
+        profile.setBuild(new Build());
+        profile.getBuild().addPlugin(plugin);
+        plugin.setGroupId(TalendMavenConstants.DEFAULT_GROUP_ID);
+        plugin.setArtifactId("ci.builder"); //$NON-NLS-1$
+        plugin.setVersion(VersionUtils.getInternalVersion()); //$NON-NLS-1$
+
+        List<PluginExecution> executions = new ArrayList<>();
+        PluginExecution pe = new PluginExecution();
+        pe.setPhase("generate-sources"); //$NON-NLS-1$
+        pe.addGoal("generate"); //$NON-NLS-1$
+        executions.add(pe);
+        plugin.setExecutions(executions);
+        
+        return model;
     }
 
     /**
