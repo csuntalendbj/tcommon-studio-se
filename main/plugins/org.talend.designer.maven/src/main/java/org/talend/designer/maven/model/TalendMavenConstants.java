@@ -114,10 +114,14 @@ public interface TalendMavenConstants {
 
     static final String PROFILE_INCLUDE_SURVIVORSHIP_RULES = "include-survivorship-rules";
 
+    static final String PROFILE_CI_BUILDER = "ci-builder";
+
     /**
      * argments
      */
     static final String ARG_SKIPTESTS = "-Dmaven.test.skip=true";
+
+    static final String ARG_SKIP_CI_BUILDER = "-P !" + TalendMavenConstants.PROFILE_CI_BUILDER;
 
     /* same as the JavaUtils.JAVA_PROJECT_NAME */
     static final String PROJECT_NAME = ".Java";
