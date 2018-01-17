@@ -40,7 +40,7 @@ import org.talend.repository.ProjectManager;
  */
 public class BuildCacheManager {
 
-    private final String BUILD_AGGREGATOR_POM_NAME = "build-aggregator.pom"; //$NON-NLS-1$
+    public final static String BUILD_AGGREGATOR_POM_NAME = "build-aggregator.pom"; //$NON-NLS-1$
 
     private final String SEPARATOR = "|"; //$NON-NLS-1$
 
