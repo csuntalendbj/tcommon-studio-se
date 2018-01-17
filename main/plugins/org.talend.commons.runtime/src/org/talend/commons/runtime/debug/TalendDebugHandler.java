@@ -65,7 +65,7 @@ public final class TalendDebugHandler {
         if (!CommonsPlugin.isDebugMode()) {
             return;
         }
-        if (console && isEclipseDebug()) {
+        if (console) {
             System.out.println(messages);
         }
         if (log) {
