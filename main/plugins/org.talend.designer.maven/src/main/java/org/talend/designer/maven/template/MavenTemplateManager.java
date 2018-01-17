@@ -219,7 +219,7 @@ public class MavenTemplateManager {
     }
 
     public static Model getCodeProjectTemplateModel() {
-        return addCIBuilder(getCodeProjectTemplateModel(null)); // by default will be current project.
+        return getCodeProjectTemplateModel(null); // by default will be current project.
     }
     
     public static Model addCIBuilder(Model model) {
@@ -289,7 +289,12 @@ public class MavenTemplateManager {
                 model.setName(ETalendMavenVariables.replaceVariables(model.getName(), variablesValuesMap));
                 
                 setJavaVersionForModel(model, variablesValuesMap);
-                
+
+                addCIBuilder(model);
+
+                Properties properties = model.getProperties();
+                properties.put("talend.project.name", projectTechName); //$NON-NLS-1$
+
                 return model;
             }
         } catch (Exception e) {
