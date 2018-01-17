@@ -106,7 +106,7 @@ public class BuildCacheManager {
     }
 
     public void build(IProgressMonitor monitor, Map<String, Object> argumentsMap) throws Exception {
-        if (!currentmodules.isEmpty()) {
+        if (needTempAggregator()) {
             createBuildAggregatorPom();
 
             String goal = (String) argumentsMap.get(TalendProcessArgumentConstant.ARG_GOAL);
@@ -120,6 +120,14 @@ public class BuildCacheManager {
                 restoreSubjobPoms();
             }
         }
+    }
+
+    /**
+     * DOC nrousseau Comment method "needTempAggregator".
+     * @return
+     */
+    public boolean needTempAggregator() {
+        return !currentmodules.isEmpty();
     }
 
     private void createBuildAggregatorPom() throws Exception {
