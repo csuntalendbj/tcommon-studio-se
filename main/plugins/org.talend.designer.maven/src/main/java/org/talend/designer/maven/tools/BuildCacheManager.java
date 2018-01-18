@@ -14,6 +14,7 @@ package org.talend.designer.maven.tools;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,11 +32,11 @@ import org.eclipse.m2e.core.embedder.IMaven;
 import org.eclipse.m2e.core.embedder.MavenModelManager;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.properties.Property;
-import org.talend.core.nexus.TalendMavenResolver;
+import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.runtime.maven.MavenArtifact;
-import org.talend.core.runtime.maven.MavenUrlHelper;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
+import org.talend.cwm.helper.ResourceHelper;
 import org.talend.designer.maven.launch.MavenPomCommandLauncher;
 import org.talend.designer.maven.model.TalendMavenConstants;
 import org.talend.designer.maven.utils.PomUtil;
@@ -60,6 +61,10 @@ public class BuildCacheManager {
     private Set<String> currentmodules = new HashSet<>();
 
     private Set<ITalendProcessJavaProject> subjobProjects = new HashSet<>();
+
+    private Map<ERepositoryObjectType, String> codesLastChangeCache = new HashMap<>();
+
+    private Map<ERepositoryObjectType, String> codesLastBuildCache = new HashMap<>();
 
     private IFile pomFile;
 
@@ -153,6 +158,32 @@ public class BuildCacheManager {
      */
     public boolean needTempAggregator() {
         return !currentmodules.isEmpty();
+    }
+
+    public void updateCodesLastChangeDate(ERepositoryObjectType codeType, Property property) {
+        String currentLastChangeDate = getTimestamp(property);
+        String cacheLastChangeDate = codesLastChangeCache.get(codeType);
+        if (!currentLastChangeDate.equals(cacheLastChangeDate)) {
+            codesLastChangeCache.put(codeType, currentLastChangeDate);
+        }
+    }
+
+    public void updateCodeLastBuildDate(ERepositoryObjectType codeType) {
+        String cacheLastChangeDate = codesLastChangeCache.get(codeType);
+        if (cacheLastChangeDate == null) {
+            cacheLastChangeDate = ResourceHelper.DATEFORMAT.format(new Date());
+            codesLastChangeCache.put(codeType, cacheLastChangeDate);
+        }
+        codesLastBuildCache.put(codeType, cacheLastChangeDate);
+    }
+
+    public boolean isCodesBuild(ERepositoryObjectType codeType) {
+        String lastBuildDate = codesLastBuildCache.get(codeType);
+        if (lastBuildDate == null) {
+            return false;
+        }
+        String cacheLastChangeDate = codesLastChangeCache.get(codeType);
+        return lastBuildDate.equals(cacheLastChangeDate);
     }
 
     private void createBuildAggregatorPom() throws Exception {

@@ -80,6 +80,7 @@ public class MavenPomSynchronizer {
     /**
      * generate routine pom.
      */
+    @Deprecated
     public void syncRoutinesPom(Property property, boolean overwrite) throws Exception {
         ITalendProcessJavaProject routineProject = runProcessService.getTalendCodeJavaProject(ERepositoryObjectType.ROUTINES);
         IFile routinesPomFile = routineProject.getProjectPom();
@@ -88,9 +89,9 @@ public class MavenPomSynchronizer {
         createTemplatePom.setProperty(property);
         createTemplatePom.setOverwrite(overwrite);
         createTemplatePom.create(null);
-        buildAndInstallCodesProject(routineProject, runProcessService.isExportConfig());
     }
 
+    @Deprecated
     public void syncBeansPom(Property property, boolean overwrite) throws Exception {
         ITalendProcessJavaProject beansProject = runProcessService
                 .getTalendCodeJavaProject(ERepositoryObjectType.valueOf("BEANS")); //$NON-NLS-1$
@@ -100,9 +101,9 @@ public class MavenPomSynchronizer {
         createTemplatePom.setProperty(property);
         createTemplatePom.setOverwrite(overwrite);
         createTemplatePom.create(null);
-        buildAndInstallCodesProject(beansProject, runProcessService.isExportConfig());
     }
 
+    @Deprecated
     public void syncPigUDFsPom(Property property, boolean overwrite) throws Exception {
         ITalendProcessJavaProject pigudfsProject = runProcessService.getTalendCodeJavaProject(ERepositoryObjectType.PIG_UDF);
         IFile pigudfPomFile = pigudfsProject.getProjectPom();
@@ -111,17 +112,6 @@ public class MavenPomSynchronizer {
         createTemplatePom.setProperty(property);
         createTemplatePom.setOverwrite(overwrite);
         createTemplatePom.create(null);
-        buildAndInstallCodesProject(pigudfsProject, runProcessService.isExportConfig());
-    }
-
-    public static void buildAndInstallCodesProject(ITalendProcessJavaProject codeProject, boolean install) throws Exception {
-        codeProject.buildModules(new NullProgressMonitor(), null, null);
-        if (install) {
-            Map<String, Object> argumentsMap = new HashMap<>();
-            argumentsMap.put(TalendProcessArgumentConstant.ARG_GOAL, TalendMavenConstants.GOAL_INSTALL);
-            argumentsMap.put(TalendProcessArgumentConstant.ARG_PROGRAM_ARGUMENTS, "-Dmaven.main.skip=true"); //$NON-NLS-1$
-            codeProject.buildModules(new NullProgressMonitor(), null, argumentsMap);
-        }
     }
 
     /**
@@ -257,7 +247,7 @@ public class MavenPomSynchronizer {
                             public void afterChangingLibraries() {
                                 try {
                                     // update the dependencies
-                                    syncCodesPoms(monitor, null, true);
+                                    AggregatorPomsHelper.updateCodeProjects(monitor);
                                 } catch (Exception e) {
                                     ExceptionHandler.process(e);
                                 }
@@ -297,6 +287,7 @@ public class MavenPomSynchronizer {
         }
     }
 
+    @Deprecated
     public void syncCodesPoms(IProgressMonitor monitor, IProcessor processor, boolean overwrite) throws Exception {
         final IProcess process = processor != null ? processor.getProcess() : null;
         Property property = null;

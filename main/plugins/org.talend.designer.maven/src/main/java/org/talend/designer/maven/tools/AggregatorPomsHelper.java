@@ -37,8 +37,10 @@ import org.eclipse.m2e.core.MavenPlugin;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.general.Project;
+import org.talend.core.model.process.ProcessUtils;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.repository.ERepositoryObjectType;
+import org.talend.core.repository.model.ProxyRepositoryFactory;
 import org.talend.core.repository.utils.ItemResourceUtil;
 import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.maven.MavenUrlHelper;
@@ -54,7 +56,9 @@ import org.talend.designer.maven.tools.creator.CreateMavenPigUDFPom;
 import org.talend.designer.maven.tools.creator.CreateMavenRoutinePom;
 import org.talend.designer.maven.utils.PomIdsHelper;
 import org.talend.designer.maven.utils.PomUtil;
+import org.talend.designer.runprocess.IRunProcessService;
 import org.talend.repository.ProjectManager;
+import org.talend.repository.RepositoryWorkUnit;
 import org.talend.repository.model.RepositoryConstants;
 
 /**
@@ -89,7 +93,8 @@ public class AggregatorPomsHelper {
             MavenPomCommandLauncher launcher = new MavenPomCommandLauncher(pomFile, TalendMavenConstants.GOAL_INSTALL);
             if (current) {
                 Map<String, Object> argumentsMap = new HashMap<>();
-                argumentsMap.put(TalendProcessArgumentConstant.ARG_PROGRAM_ARGUMENTS, "-N " + TalendMavenConstants.ARG_SKIP_CI_BUILDER); // $NON-NLS-N$
+                argumentsMap.put(TalendProcessArgumentConstant.ARG_PROGRAM_ARGUMENTS,
+                        "-N " + TalendMavenConstants.ARG_SKIP_CI_BUILDER); // $NON-NLS-N$
                 launcher.setArgumentsMap(argumentsMap);
             }
             launcher.execute(new NullProgressMonitor());
@@ -125,6 +130,43 @@ public class AggregatorPomsHelper {
         return getProjectPomsFolder().getFolder(DIR_AGGREGATORS);
     }
 
+    private static ITalendProcessJavaProject getCodesProject(ERepositoryObjectType codeType) {
+        if (GlobalServiceRegister.getDefault().isServiceRegistered(IRunProcessService.class)) {
+            IRunProcessService runProcessService = (IRunProcessService) GlobalServiceRegister.getDefault()
+                    .getService(IRunProcessService.class);
+            return runProcessService.getTalendCodeJavaProject(codeType);
+        }
+        return null;
+    }
+
+    public static void updateCodeProjects(IProgressMonitor monitor) {
+        RepositoryWorkUnit workUnit = new RepositoryWorkUnit<Object>("update code project") { //$NON-NLS-1$
+
+            @Override
+            protected void run() {
+                updateCodeProject(monitor, ERepositoryObjectType.ROUTINES);
+                if (ProcessUtils.isRequiredPigUDFs(null)) {
+                    updateCodeProject(monitor, ERepositoryObjectType.PIG_UDF);
+                }
+                if (ProcessUtils.isRequiredBeans(null)) {
+                    updateCodeProject(monitor, ERepositoryObjectType.valueOf("BEANS")); //$NON-NLS-1$
+                }
+            }
+        };
+        workUnit.setAvoidUnloadResources(true);
+        ProxyRepositoryFactory.getInstance().executeRepositoryWorkUnit(workUnit);
+    }
+
+    private static void updateCodeProject(IProgressMonitor monitor, ERepositoryObjectType codeType) {
+        try {
+            ITalendProcessJavaProject codeProject = getCodesProject(codeType);
+            AggregatorPomsHelper.updateCodeProjectPom(monitor, codeType, codeProject.getProjectPom());
+            buildAndInstallCodesProject(monitor, codeType);
+        } catch (Exception e) {
+            ExceptionHandler.process(e);
+        }
+    }
+
     public static void updateCodeProjectPom(IProgressMonitor monitor, ERepositoryObjectType type, IFile pomFile)
             throws Exception {
         if (type != null) {
@@ -158,6 +200,21 @@ public class AggregatorPomsHelper {
     public static void createBeansPom(IFile pomFile, IProgressMonitor monitor) throws Exception {
         CreateMavenBeanPom createTemplatePom = new CreateMavenBeanPom(pomFile);
         createTemplatePom.create(monitor);
+    }
+
+    public static void buildAndInstallCodesProject(IProgressMonitor monitor, ERepositoryObjectType codeType) throws Exception {
+        if (!BuildCacheManager.getInstance().isCodesBuild(codeType)) {
+            ITalendProcessJavaProject codeProject = getCodesProject(codeType);
+
+            codeProject.buildModules(new NullProgressMonitor(), null, null);
+
+            Map<String, Object> argumentsMap = new HashMap<>();
+            argumentsMap.put(TalendProcessArgumentConstant.ARG_GOAL, TalendMavenConstants.GOAL_INSTALL);
+            argumentsMap.put(TalendProcessArgumentConstant.ARG_PROGRAM_ARGUMENTS, "-Dmaven.main.skip=true"); //$NON-NLS-1$
+            codeProject.buildModules(new NullProgressMonitor(), null, argumentsMap);
+
+            BuildCacheManager.getInstance().updateCodeLastBuildDate(codeType);
+        }
     }
 
     public void createUserDefinedFolderPom(IFile pomFile, String folderName, String groupId, IProgressMonitor monitor) {
@@ -208,11 +265,11 @@ public class AggregatorPomsHelper {
             return null;
         }
         IContainer parentPomFolder = pomFile.getParent();
-        int nb=10;
-        while(parentPomFolder != null && !parentPomFolder.getName().equals(RepositoryConstants.POMS_DIRECTORY)) {
+        int nb = 10;
+        while (parentPomFolder != null && !parentPomFolder.getName().equals(RepositoryConstants.POMS_DIRECTORY)) {
             parentPomFolder = parentPomFolder.getParent();
             nb--;
-            if (nb <0) {
+            if (nb < 0) {
                 // only to avoid infinite loop in case there is some folder issues (poms folder not found)
                 return null;
             }

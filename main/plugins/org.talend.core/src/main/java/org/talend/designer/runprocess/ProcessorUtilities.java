@@ -763,7 +763,7 @@ public class ProcessorUtilities {
 
     private static IProcessor generateCode(JobInfo jobInfo, String selectedContextName, boolean statistics, boolean trace,
             boolean needContext, int option, IProgressMonitor progressMonitor) throws ProcessorException {
-        CorePlugin.getDefault().getRunProcessService().buildCodesJavaProject();
+        CorePlugin.getDefault().getRunProcessService().buildCodesJavaProject(progressMonitor);
         return generateCode(jobInfo, selectedContextName, statistics, trace, needContext, true, option, progressMonitor);
     }
 
@@ -1496,7 +1496,7 @@ public class ProcessorUtilities {
             RepositoryManager.syncRoutineAndJoblet(ERepositoryObjectType.PIG_UDF);
         }
 
-        CorePlugin.getDefault().getRunProcessService().buildCodesJavaProject();
+        CorePlugin.getDefault().getRunProcessService().buildCodesJavaProject(progressMonitor);
  
         // achen modify to fix 0006107
         ProcessItem pItem = null;
