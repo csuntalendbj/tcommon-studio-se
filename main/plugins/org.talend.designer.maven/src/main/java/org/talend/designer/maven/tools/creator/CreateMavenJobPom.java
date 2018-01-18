@@ -590,15 +590,20 @@ public class CreateMavenJobPom extends AbstractMavenProcessorPom {
         
         
         try {
-            Set<String> talendLibCoordinate = new HashSet<>();
             Model model = MavenPlugin.getMavenModelManager().readMavenModel(getPomFile());
             List<Dependency> dependencies = model.getDependencies();
             // add talend libraries and codes
+            Set<String> talendLibCoordinate = new HashSet<>();
+            String projectGroupId = PomIdsHelper.getProjectGroupId();
             for (Dependency dependency : dependencies) {
-                String coordinate = dependency.getGroupId() + ":" + dependency.getArtifactId(); //$NON-NLS-1$
+                String dependencyGroupId = dependency.getGroupId();
+                String coordinate = dependencyGroupId + ":" + dependency.getArtifactId(); //$NON-NLS-1$
                 if (!childrenCoordinate.contains(coordinate)) {
-                    addItem(talendlibIncludes, coordinate, SEPARATOR);
-                    talendLibCoordinate.add(coordinate);
+                    // FIXME should use dependencyGroupId.startsWith(projectGroupId)
+                    if ("org.talend.libraries".equals(dependencyGroupId) || dependencyGroupId.startsWith("org.talend")) { //$NON-NLS-1$
+                        addItem(talendlibIncludes, coordinate, SEPARATOR);
+                        talendLibCoordinate.add(coordinate);
+                    }
                 }
             }
             // add 3rd party libraries
@@ -607,9 +612,9 @@ public class CreateMavenJobPom extends AbstractMavenProcessorPom {
                 if (!childrenCoordinate.contains(coordinate) && !talendLibCoordinate.contains(coordinate)) {
                     addItem(_3rdPartylibExcludes, coordinate, SEPARATOR);
                 }
-                if (_3rdPartylibExcludes.length() == 0) {
-                    addItem(_3rdPartylibExcludes, "null:null", SEPARATOR);
-                }
+            }
+            if (_3rdPartylibExcludes.length() == 0) {
+                addItem(_3rdPartylibExcludes, "null:null", SEPARATOR); //$NON-NLS-1$
             }
         } catch (CoreException e) {
             ExceptionHandler.process(e);
