@@ -18,6 +18,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -833,4 +834,27 @@ public class PomUtil {
         }
     }
 
+    public static void cleanLastUpdatedFile(final File file) {
+        if (file != null && file.exists()) {
+            if (file.isDirectory()) {
+                File[] list = file.listFiles(lastUpdatedFilter);
+                if (list != null) {
+                    for (File f : list) {
+                        cleanLastUpdatedFile(f);
+                    }
+                }
+            } else if (file.isFile() && lastUpdatedFilter.accept(file)) {
+                file.delete();
+            }
+        }
+    }
+
+    private final static FileFilter lastUpdatedFilter = new FileFilter() {
+
+        @Override
+        public boolean accept(File pathname) {
+            return pathname.isDirectory() || pathname.getName().endsWith(".lastUpdated") //$NON-NLS-1$
+                    || pathname.getName().equals("m2e-lastUpdated.properties"); //$NON-NLS-1$
+        }
+    };
 }

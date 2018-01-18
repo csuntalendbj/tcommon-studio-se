@@ -12,6 +12,7 @@
 // ============================================================================
 package org.talend.designer.maven.tools;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,8 +26,14 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.m2e.core.MavenPlugin;
+import org.eclipse.m2e.core.embedder.IMaven;
+import org.eclipse.m2e.core.embedder.MavenModelManager;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.properties.Property;
+import org.talend.core.nexus.TalendMavenResolver;
+import org.talend.core.runtime.maven.MavenArtifact;
+import org.talend.core.runtime.maven.MavenUrlHelper;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
 import org.talend.designer.maven.launch.MavenPomCommandLauncher;
@@ -108,11 +115,28 @@ public class BuildCacheManager {
     public void build(IProgressMonitor monitor, Map<String, Object> argumentsMap) throws Exception {
         if (needTempAggregator()) {
             createBuildAggregatorPom();
-
-            String goal = (String) argumentsMap.get(TalendProcessArgumentConstant.ARG_GOAL);
-            MavenPomCommandLauncher mavenLauncher = new MavenPomCommandLauncher(pomFile, goal);
-            mavenLauncher.setArgumentsMap(argumentsMap);
             try {
+                for (ITalendProcessJavaProject project : subjobProjects) {
+                    MavenModelManager mavenModelManager = MavenPlugin.getMavenModelManager();
+                    Model projModel = mavenModelManager.readMavenModel(project.getProjectPom());
+                    MavenArtifact artifact = new MavenArtifact();
+                    artifact.setGroupId(projModel.getGroupId());
+                    artifact.setArtifactId(projModel.getArtifactId());
+                    artifact.setVersion(projModel.getVersion());
+                    String artifactPath = PomUtil.getArtifactPath(artifact);
+
+                    final IMaven maven = MavenPlugin.getMaven();
+                    String localRepositoryPath = maven.getLocalRepositoryPath();
+                    if (localRepositoryPath != null) {
+                        File moduleFolder = new File(localRepositoryPath, artifactPath);
+
+                        PomUtil.cleanLastUpdatedFile(moduleFolder.getParentFile());
+                    }
+                }
+
+                String goal = (String) argumentsMap.get(TalendProcessArgumentConstant.ARG_GOAL);
+                MavenPomCommandLauncher mavenLauncher = new MavenPomCommandLauncher(pomFile, goal);
+                mavenLauncher.setArgumentsMap(argumentsMap);
                 mavenLauncher.execute(monitor);
             } finally {
                 deleteBuildAggregatorPom();
@@ -124,6 +148,7 @@ public class BuildCacheManager {
 
     /**
      * DOC nrousseau Comment method "needTempAggregator".
+     * 
      * @return
      */
     public boolean needTempAggregator() {
