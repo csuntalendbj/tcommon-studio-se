@@ -56,6 +56,7 @@ import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.runtime.debug.TalendDebugHandler;
 import org.talend.commons.ui.runtime.CommonUIPlugin;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
+import org.talend.designer.maven.model.TalendMavenConstants;
 
 /**
  * DOC ggu class global comment. Detailled comment
@@ -166,7 +167,8 @@ public abstract class MavenCommandLauncher {
             // basedir.getProject().getName());
 
             // --------------Special settings for Talend----------
-            if (isCaptureOutputInConsoleView()) {
+            boolean captureLogs = isCaptureOutputInConsoleView() || TalendMavenConstants.GOAL_INSTALL.equals(goal);
+            if (captureLogs) {
                 // by default will catch the output in console. so set null
                 workingCopy.setAttribute(DebugPlugin.ATTR_CAPTURE_OUTPUT, (String) null);
             } else {
@@ -199,10 +201,12 @@ public abstract class MavenCommandLauncher {
             if (StringUtils.isNotEmpty(programArgs)) {
                 workingCopy.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, programArgs);
             }
-            IPath generatedLog = basedir.getProject().getLocation().append("lastGenerated.log"); //$NON-NLS-1$
-            workingCopy.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
-                    "-l " + MavenLaunchUtils.quote(generatedLog.toPortableString()) + " " //$NON-NLS-1$ //$NON-NLS-2$
-                            + workingCopy.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "")); //$NON-NLS-1$
+            if (!captureLogs) {
+                IPath generatedLog = basedir.getProject().getLocation().append("lastGenerated.log"); //$NON-NLS-1$
+                workingCopy.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
+                        "-l " + MavenLaunchUtils.quote(generatedLog.toPortableString()) + " " //$NON-NLS-1$ //$NON-NLS-2$
+                                + workingCopy.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "")); //$NON-NLS-1$
+            }
 
             // TODO when launching Maven with debugger consider to add the following property
             // -Dmaven.surefire.debug="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000 -Xnoagent
@@ -289,12 +293,11 @@ public abstract class MavenCommandLauncher {
             }
         }
 
-        // }finally{
-        // if (launch != null) {
-        // if remove, after execute launch, will remove the console also. so shouldn't remove it.
-        // DebugPlugin.getDefault().getLaunchManager().removeLaunch(launch);
-        // }
-        // }
+        if (TalendMavenConstants.GOAL_INSTALL.equals(launchConfiguration.getAttribute(MavenLaunchConstants.ATTR_GOALS, ""))) {
+            if (errors.length() != 0) {
+                throw new Exception(errors.toString());
+            }
+        }
     }
 
     protected ILaunch buildAndLaunch(ILaunchConfiguration configuration, String mode, IProgressMonitor monitor)
@@ -333,7 +336,7 @@ public abstract class MavenCommandLauncher {
         private boolean launchFinished = false;
 
         private IProgressMonitor monitor;
-        
+
         public TalendLauncherWaiter(ILaunchConfiguration launchConfig, IProgressMonitor monitor) {
             super();
             this.launchConfig = launchConfig;

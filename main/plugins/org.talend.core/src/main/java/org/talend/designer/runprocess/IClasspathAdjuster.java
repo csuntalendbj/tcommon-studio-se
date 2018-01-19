@@ -27,6 +27,11 @@ public interface IClasspathAdjuster {
 
     public void collectInfo(IProcess process, Set<ModuleNeeded> modules);
 
+    @Deprecated
     public Set<ModuleNeeded> adjustClassPath(Set<ModuleNeeded> modulesToAjust);
 
+    default public Set<ModuleNeeded> adjustClassPath(IProcess process, Set<ModuleNeeded> modulesToAjust) 
+    {
+        return modulesToAjust;
+    };
 }

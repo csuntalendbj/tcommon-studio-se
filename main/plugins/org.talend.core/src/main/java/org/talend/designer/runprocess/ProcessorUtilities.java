@@ -506,7 +506,7 @@ public class ProcessorUtilities {
             Set<ModuleNeeded> adjustClassPath = new HashSet<ModuleNeeded>(neededLibraries);
             for (IClasspathAdjuster adjuster : classPathAdjusters) {
                 adjuster.collectInfo(currentProcess, neededLibraries);
-                adjustClassPath = adjuster.adjustClassPath(adjustClassPath);
+                adjustClassPath = adjuster.adjustClassPath(currentProcess, adjustClassPath);
             }
 
             LastGenerationInfo.getInstance().setModulesNeededWithSubjobPerJob(jobInfo.getJobId(), jobInfo.getJobVersion(),
@@ -906,7 +906,7 @@ public class ProcessorUtilities {
                 Set<ModuleNeeded> adjustClassPath = new HashSet<ModuleNeeded>(neededLibraries);
                 for (IClasspathAdjuster adjuster : classPathAdjusters) {
                     adjuster.collectInfo(currentProcess, neededLibraries);
-                    adjustClassPath = adjuster.adjustClassPath(adjustClassPath);
+                    adjustClassPath = adjuster.adjustClassPath(currentProcess, adjustClassPath);
                 }
 
                 if (isNeedLoadmodules) {
@@ -1021,7 +1021,7 @@ public class ProcessorUtilities {
                 final Iterator<String> relativepath = resouece.getRelativePathList().iterator();
                 String pathStr = "metadata/survivorship"; //$NON-NLS-1$
                 IRunProcessService runProcessService = CorePlugin.getDefault().getRunProcessService();
-                ITalendProcessJavaProject talendProcessJavaProject = runProcessService.getTalendProcessJavaProject();
+                ITalendProcessJavaProject talendProcessJavaProject = runProcessService.getTalendJobJavaProject(processItem.getProperty());
                 IFolder targetFolder = talendProcessJavaProject.getResourcesFolder();
                 if (targetFolder.exists()) {
                     IFolder survFolder = targetFolder.getFolder(new Path(pathStr));
