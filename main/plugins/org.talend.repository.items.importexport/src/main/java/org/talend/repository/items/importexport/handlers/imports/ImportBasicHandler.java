@@ -23,7 +23,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,7 +99,6 @@ import org.talend.designer.joblet.model.JobletProcess;
 import org.talend.model.emf.CwmResource;
 import org.talend.repository.ProjectManager;
 import org.talend.repository.RepositoryWorkUnit;
-import org.talend.repository.documentation.ERepositoryActionName;
 import org.talend.repository.items.importexport.handlers.HandlerUtil;
 import org.talend.repository.items.importexport.handlers.cache.RepositoryObjectCache;
 import org.talend.repository.items.importexport.handlers.model.ImportItem;
@@ -1031,7 +1029,6 @@ public class ImportBasicHandler extends AbstractImportExecutableHandler {
 
     protected void afterApplyMigrationTasks(ImportItem selectedImportItem) throws Exception {
         // do nothing by default
-        ProxyRepositoryFactory.getInstance().fireRepositoryPropertyChange(ERepositoryActionName.IMPORT.getName(), null, selectedImportItem.getItem());
     }
 
     protected boolean copyReferenceFiles(ResourcesManager manager, ImportItem selectedImportItem) throws IOException {

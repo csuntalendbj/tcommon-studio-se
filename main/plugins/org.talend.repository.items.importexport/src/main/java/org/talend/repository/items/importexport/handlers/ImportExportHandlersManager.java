@@ -65,6 +65,7 @@ import org.talend.core.runtime.CoreRuntimePlugin;
 import org.talend.core.ui.IJobletProviderService;
 import org.talend.repository.ProjectManager;
 import org.talend.repository.RepositoryWorkUnit;
+import org.talend.repository.documentation.ERepositoryActionName;
 import org.talend.repository.items.importexport.handlers.imports.IImportItemsHandler;
 import org.talend.repository.items.importexport.handlers.imports.IImportResourcesHandler;
 import org.talend.repository.items.importexport.handlers.imports.ImportBasicHandler;
@@ -632,7 +633,18 @@ public class ImportExportHandlersManager {
                             } catch (Exception e) {
                                 ExceptionHandler.process(e);
                             }
+
+                            fireImportChange(importedItemRecords);
+
                             unloadImportItems(allImportItemRecords);
+                        }
+
+                        private void fireImportChange(List<ImportItem> importedItemRecords) {
+                            Set<Item> importedItems = new HashSet<>();
+                            for (ImportItem importedItem : importedItemRecords) {
+                                importedItems.add(importedItem.getItem());
+                            }
+                            ProxyRepositoryFactory.getInstance().fireRepositoryPropertyChange(ERepositoryActionName.IMPORT.getName(), null, importedItems);
                         }
 
                         private void importItemRecordsWithRelations(final IProgressMonitor monitor,
