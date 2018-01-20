@@ -49,12 +49,12 @@ public interface ITalendProcessJavaProject {
     /**
      * src/main/ext-resources as external resources folder
      */
-    IFolder getResourcesFolder();
+    IFolder getExternalResourcesFolder();
 
     /**
      * src/main/resources as internal resources folder
      */
-    IFolder getInternalResourcesFolder();
+    IFolder getResourcesFolder();
 
     /**
      * src/test/resources

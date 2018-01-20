@@ -65,7 +65,7 @@ public class SyncChildrenContextsResourcesProvider implements IBuildResourcesPro
         final IRunProcessService runProcessService = (IRunProcessService) GlobalServiceRegister.getDefault().getService(
                 IRunProcessService.class);
 
-        final IFolder mainResourcesFolder = processJavaProject.getResourcesFolder();
+        final IFolder mainResourcesFolder = processJavaProject.getExternalResourcesFolder();
         final File targetFolder = mainResourcesFolder.getLocation().toFile();
 
         for (Object item : dependenciesItems) {
@@ -73,7 +73,7 @@ public class SyncChildrenContextsResourcesProvider implements IBuildResourcesPro
                 ITalendProcessJavaProject childJavaProject = runProcessService.getTalendJobJavaProject(((ProcessItem) item)
                         .getProperty());
                 if (childJavaProject != null) {
-                    final IFolder childResourcesFolder = childJavaProject.getResourcesFolder();
+                    final IFolder childResourcesFolder = childJavaProject.getExternalResourcesFolder();
                     if (childResourcesFolder.exists()) {
                         FileCopyUtils.syncFolder(childResourcesFolder.getLocation().toFile(), targetFolder, false);
                     }

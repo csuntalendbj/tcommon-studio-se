@@ -32,6 +32,6 @@ public interface IClasspathAdjuster {
 
     default public Set<ModuleNeeded> adjustClassPath(IProcess process, Set<ModuleNeeded> modulesToAjust) 
     {
-        return modulesToAjust;
+        return adjustClassPath(modulesToAjust);//modulesToAjust;
     };
 }

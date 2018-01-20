@@ -201,7 +201,7 @@ public class MavenPomSynchronizer {
         codeProject.cleanFolder(monitor, srcFolder);
 
         // empty resources
-        IFolder resourcesFolder = codeProject.getResourcesFolder();
+        IFolder resourcesFolder = codeProject.getExternalResourcesFolder();
         codeProject.cleanFolder(monitor, resourcesFolder);
 
         // empty the outputs, target

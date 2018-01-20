@@ -109,7 +109,7 @@ public class CoreServiceTest {
 
         service.syncLog4jSettings(talendProcessJavaProject);
 
-        IFolder resourceFolder = talendProcessJavaProject.getResourcesFolder();
+        IFolder resourceFolder = talendProcessJavaProject.getExternalResourcesFolder();
         IFile log4jFile = resourceFolder.getFile("log4j.xml");
         if (log4jFile.exists()) {
             String content = "test modification";

@@ -97,7 +97,7 @@ public class LocalRepositoryAetherManager extends LocalRepositoryManager {
                 ITalendProcessJavaProject talendProcessJavaProject = service.getTempJavaProject();
                 if (talendProcessJavaProject != null) {
                     tempFolder = talendProcessJavaProject.createSubFolder(null, (IFolder) talendProcessJavaProject
-                            .getResourcesFolder().getParent(), "temp"); //$NON-NLS-1$
+                            .getExternalResourcesFolder().getParent(), "temp"); //$NON-NLS-1$
                 } else {
                     try {
                         tempFolder = ResourceUtils.getProject(
