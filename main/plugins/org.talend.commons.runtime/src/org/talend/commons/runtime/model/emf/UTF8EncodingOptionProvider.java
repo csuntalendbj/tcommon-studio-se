@@ -10,23 +10,26 @@
 // 9 rue Pages 92150 Suresnes, France
 //
 // ============================================================================
-package org.talend.commons.runtime.model.emf.provider;
+package org.talend.commons.runtime.model.emf;
+
+import java.nio.charset.StandardCharsets;
+
+import org.eclipse.emf.ecore.xmi.XMLResource;
+import org.talend.commons.runtime.model.emf.provider.OptionProvider;
 
 /**
  * DOC ggu class global comment. Detailled comment
  */
-public abstract class OptionProvider implements IOptionProvider {
+public class UTF8EncodingOptionProvider extends OptionProvider {
 
-    public abstract String getName();
-
-    public abstract Object getValue();
-
-    public boolean checkSave(Object resource) {
-        return true; // nothing to check by default
+    @Override
+    public String getName() {
+        return XMLResource.OPTION_ENCODING;
     }
 
-    public boolean checkLoad(Object resource) {
-        return true; // nothing to check by default
+    @Override
+    public Object getValue() {
+        return StandardCharsets.UTF_8.name();
     }
 
 }

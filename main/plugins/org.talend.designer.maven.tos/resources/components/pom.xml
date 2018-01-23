@@ -48,6 +48,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.talend.components</groupId>
+			<artifactId>components-jdbc-runtime</artifactId>
+			<version>${components.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.components</groupId>
 			<artifactId>components-splunk</artifactId>
 			<version>${components.version}</version>
 		</dependency>
@@ -84,6 +89,11 @@
 		<dependency>
 			<groupId>org.talend.components</groupId>
 			<artifactId>components-googledrive-runtime</artifactId>
+			<version>${components.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.talend.components</groupId>
+			<artifactId>components-marklogic-runtime</artifactId>
 			<version>${components.version}</version>
 		</dependency>
         <dependency>
