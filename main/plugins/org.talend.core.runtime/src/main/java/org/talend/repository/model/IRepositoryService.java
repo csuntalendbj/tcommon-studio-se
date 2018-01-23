@@ -134,4 +134,8 @@ public interface IRepositoryService extends IService {
 
     public boolean askRetryForNetworkIssue(Throwable ex);
 
+    boolean isSVN();
+
+    boolean isGIT();
+
 }

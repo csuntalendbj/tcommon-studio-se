@@ -38,6 +38,7 @@ import org.talend.commons.exception.ExceptionHandler;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.general.Project;
 import org.talend.core.model.process.ProcessUtils;
+import org.talend.core.model.properties.ProjectReference;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
@@ -59,6 +60,7 @@ import org.talend.designer.maven.utils.PomUtil;
 import org.talend.designer.runprocess.IRunProcessService;
 import org.talend.repository.ProjectManager;
 import org.talend.repository.RepositoryWorkUnit;
+import org.talend.repository.model.IRepositoryService;
 import org.talend.repository.model.RepositoryConstants;
 
 /**
@@ -119,8 +121,7 @@ public class AggregatorPomsHelper {
             throws Exception {
         if (folder != null) {
             IFile pomFile = folder.getFile(TalendMavenConstants.POM_FILE_NAME);
-            Model model = MavenTemplateManager.getAggregatorFolderTemplateModel(pomFile, groupId, folderName,
-                    projectTechName);
+            Model model = MavenTemplateManager.getAggregatorFolderTemplateModel(pomFile, groupId, folderName, projectTechName);
             PomUtil.savePom(monitor, model, pomFile);
         }
     }
@@ -218,6 +219,70 @@ public class AggregatorPomsHelper {
 
     public void createUserDefinedFolderPom(IFile pomFile, String folderName, String groupId, IProgressMonitor monitor) {
         // TODO
+    }
+
+    public static void updateRefProjectModules(List<ProjectReference> references) {
+        RepositoryWorkUnit workUnit = new RepositoryWorkUnit<Object>("update ref project modules in project pom") { //$NON-NLS-1$
+
+            @Override
+            protected void run() {
+                try {
+                    List<String> modules = new ArrayList<>();
+                    for (ProjectReference reference : references) {
+                        String modulePath = getRefProjectAsModulePath(reference.getReferencedProject().getTechnicalLabel());
+                        modules.add(modulePath);
+                    }
+
+                    Project mainProject = ProjectManager.getInstance().getCurrentProject();
+                    IFolder mainPomsFolder = new AggregatorPomsHelper(mainProject.getTechnicalLabel()).getProjectPomsFolder();
+                    IFile mainPomFile = mainPomsFolder.getFile(TalendMavenConstants.POM_FILE_NAME);
+
+                    Model model = MavenPlugin.getMavenModelManager().readMavenModel(mainPomFile);
+                    List<String> oldModules = model.getModules();
+                    if (oldModules == null) {
+                        oldModules = new ArrayList<>();
+                    }
+                    ListIterator<String> iterator = oldModules.listIterator();
+                    while (iterator.hasNext()) {
+                        String modulePath = iterator.next();
+                        if (modulePath.startsWith("../../")) { //$NON-NLS-1$
+                            iterator.remove();
+                        }
+                    }
+                    oldModules.addAll(modules);
+                    
+                    PomUtil.savePom(null, model, mainPomFile);
+                } catch (Exception e) {
+                    ExceptionHandler.process(e);
+                }
+            }
+        };
+        workUnit.setAvoidUnloadResources(true);
+        ProxyRepositoryFactory.getInstance().executeRepositoryWorkUnit(workUnit);
+    }
+
+    private static String getRefProjectAsModulePath(String projectTechName) {
+        String modulePath = null;
+        IPath basePath = null;
+        if (GlobalServiceRegister.getDefault().isServiceRegistered(IRepositoryService.class)) {
+            IRepositoryService service = (IRepositoryService) GlobalServiceRegister.getDefault()
+                    .getService(IRepositoryService.class);
+            if (service.isGIT()) {
+                modulePath = "../../../../"; //$NON-NLS-1$
+                basePath = ResourcesPlugin.getWorkspace().getRoot().getLocation().append("/.repositories"); //$NON-NLS-1$
+            } else if (service.isSVN()) {
+                modulePath = "../../"; //$NON-NLS-1$
+                basePath = ResourcesPlugin.getWorkspace().getRoot().getLocation();
+            }
+        }
+        if (modulePath == null || basePath == null) {
+            return null;
+        }
+        IFolder refPomsFolder = new AggregatorPomsHelper(projectTechName).getProjectPomsFolder();
+        IPath relativePath = refPomsFolder.getLocation().makeRelativeTo(basePath);
+        modulePath += relativePath.toPortableString();
+
+        return modulePath;
     }
 
     public static void addToParentModules(IFile pomFile) throws Exception {
