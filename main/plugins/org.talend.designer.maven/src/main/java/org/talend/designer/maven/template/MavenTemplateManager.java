@@ -324,10 +324,9 @@ public class MavenTemplateManager {
 
     private static Model getDefaultCodeProjectTemplateModel(String projectTechName) {
         Model templateCodeProjectMOdel = new Model();
-        Project project = ProjectManager.getInstance().getProjectFromProjectTechLabel(projectTechName);
-        templateCodeProjectMOdel.setGroupId(PomIdsHelper.getProjectGroupId(project));
+        templateCodeProjectMOdel.setGroupId(PomIdsHelper.getProjectGroupId(projectTechName));
         templateCodeProjectMOdel.setArtifactId(PomIdsHelper.getProjectArtifactId());
-        templateCodeProjectMOdel.setVersion(PomIdsHelper.getProjectVersion(project));
+        templateCodeProjectMOdel.setVersion(PomIdsHelper.getProjectVersion(projectTechName));
         templateCodeProjectMOdel.setPackaging(TalendMavenConstants.PACKAGING_POM);
 
         return templateCodeProjectMOdel;

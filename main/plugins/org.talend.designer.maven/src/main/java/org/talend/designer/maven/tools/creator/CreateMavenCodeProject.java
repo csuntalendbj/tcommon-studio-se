@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.maven.model.Model;
-import org.apache.maven.project.MavenProject;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
@@ -32,7 +31,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.m2e.core.MavenPlugin;
-import org.eclipse.m2e.core.embedder.MavenModelManager;
 import org.eclipse.m2e.core.internal.Messages;
 import org.eclipse.m2e.core.internal.project.ProjectConfigurationManager;
 import org.eclipse.osgi.util.NLS;
@@ -43,11 +41,9 @@ import org.talend.designer.maven.model.MavenSystemFolders;
 import org.talend.designer.maven.model.ProjectSystemFolder;
 import org.talend.designer.maven.model.TalendJavaProjectConstants;
 import org.talend.designer.maven.model.TalendMavenConstants;
-import org.talend.designer.maven.template.MavenTemplateManager;
 import org.talend.designer.maven.tools.AggregatorPomsHelper;
 import org.talend.designer.maven.utils.MavenProjectUtils;
 import org.talend.designer.maven.utils.PomIdsHelper;
-import org.talend.designer.maven.utils.PomUtil;
 
 /**
  * created by ggu on 22 Jan 2015 Detailled comment
@@ -85,7 +81,7 @@ public class CreateMavenCodeProject extends AbstractMavenGeneralTemplatePom {
         // temp model.
         Model templateModel = new Model();
         templateModel.setModelVersion("4.0.0"); //$NON-NLS-1$
-        templateModel.setGroupId(PomIdsHelper.getJobGroupId(project.getName()));
+        templateModel.setGroupId("org.talend.temp.job"); //$NON-NLS-1$
         templateModel.setArtifactId(TalendJavaProjectConstants.TEMP_POM_ARTIFACT_ID);
         templateModel.setVersion(PomIdsHelper.getProjectVersion());
         templateModel.setPackaging(TalendMavenConstants.PACKAGING_JAR);

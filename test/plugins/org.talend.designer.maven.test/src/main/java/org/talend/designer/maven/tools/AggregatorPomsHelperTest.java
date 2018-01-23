@@ -22,7 +22,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.junit.Test;
-import org.talend.core.model.general.Project;
 import org.talend.core.model.properties.PropertiesFactory;
 import org.talend.core.model.properties.Property;
 import org.talend.designer.maven.model.TalendJavaProjectConstants;
@@ -59,11 +58,11 @@ public class AggregatorPomsHelperTest {
 
     @Test
     public void testGetJobProjectName() {
-        Project project = ProjectManager.getInstance().getCurrentProject();
+        String projectTechName = ProjectManager.getInstance().getCurrentProject().getTechnicalLabel();
         Property property = PropertiesFactory.eINSTANCE.createProperty();
         property.setLabel("Job1");
         property.setVersion("1.0");
-        String jobProjectName = AggregatorPomsHelper.getJobProjectName(project, property);
+        String jobProjectName = new AggregatorPomsHelper(projectTechName).getJobProjectName(property);
         assertEquals("AUTO_LOGIN_PROJECT_JOB1_1.0", jobProjectName);
     }
 
@@ -77,10 +76,11 @@ public class AggregatorPomsHelperTest {
 
     @Test
     public void testgetJobProjectId() {
+        String projectTechName = ProjectManager.getInstance().getCurrentProject().getTechnicalLabel();
         String id = "abcde-_e";
         String version = "1.0";
-        String jobProjectId = AggregatorPomsHelper.getJobProjectId(id, version);
-        assertEquals("abcde-_e|1.0", jobProjectId);
+        String jobProjectId = AggregatorPomsHelper.getJobProjectId(projectTechName, id, version);
+        assertEquals("AUTO_LOGIN_PROJECT|abcde-_e|1.0", jobProjectId);
     }
 
 }

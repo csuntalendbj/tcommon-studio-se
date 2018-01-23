@@ -986,8 +986,7 @@ public class ProcessorUtilities {
         // only)
         // here we recreate a new JobInfo, to be sure to don't have link in memory to Emf or IProcess
         JobInfo generatedJobInfo = cloneJobInfo(jobInfo);
-        String projectFolderName;
-        projectFolderName = JavaResourcesHelper.getProjectFolderName(selectedProcessItem);
+        String projectFolderName = JavaResourcesHelper.getProjectFolderName(selectedProcessItem);
         generatedJobInfo.setProjectFolderName(projectFolderName);
         LastGenerationInfo.getInstance().getLastGeneratedjobs().add(generatedJobInfo);
         if (isMainJob) {
@@ -1063,6 +1062,7 @@ public class ProcessorUtilities {
         generatedJobInfo.setJobName(jobInfo.getJobName());
         generatedJobInfo.setTestContainer(jobInfo.isTestContainer());
         generatedJobInfo.setFatherJobInfo(cloneJobInfo(jobInfo.getFatherJobInfo()));
+        generatedJobInfo.setProcessor(jobInfo.getProcessor());
         return generatedJobInfo;
     }
 

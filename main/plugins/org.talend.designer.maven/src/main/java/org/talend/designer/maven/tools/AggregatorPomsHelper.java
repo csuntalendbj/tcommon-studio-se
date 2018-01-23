@@ -66,17 +66,21 @@ import org.talend.repository.model.RepositoryConstants;
  */
 public class AggregatorPomsHelper {
 
-    private Project project;
+    private String projectTechName;
 
-    public AggregatorPomsHelper(Project project) {
-        this.project = project;
+    public AggregatorPomsHelper() {
+        projectTechName = ProjectManager.getInstance().getCurrentProject().getTechnicalLabel();
+    }
+
+    public AggregatorPomsHelper(String projectTechName) {
+        this.projectTechName = projectTechName;
     }
 
     public void createRootPom(IFolder folder, IProgressMonitor monitor) throws Exception {
         IFile pomFile = folder.getFile(TalendMavenConstants.POM_FILE_NAME);
         if (!pomFile.exists()) {
             Map<String, Object> parameters = new HashMap<String, Object>();
-            parameters.put(MavenTemplateManager.KEY_PROJECT_NAME, project.getTechnicalLabel());
+            parameters.put(MavenTemplateManager.KEY_PROJECT_NAME, projectTechName);
             Model model = MavenTemplateManager.getCodeProjectTemplateModel(parameters);
             PomUtil.savePom(monitor, model, pomFile);
         }
@@ -101,11 +105,6 @@ public class AggregatorPomsHelper {
         }
     }
 
-    public boolean isRootPomInstalled() {
-        return isPomInstalled(PomIdsHelper.getProjectGroupId(project), PomIdsHelper.getProjectArtifactId(),
-                PomIdsHelper.getProjectVersion(project));
-    }
-
     public boolean isPomInstalled(String groupId, String artifactId, String version) {
         String mvnUrl = MavenUrlHelper.generateMvnUrl(groupId, artifactId, version, MavenConstants.PACKAGING_POM, null);
         return PomUtil.isAvailable(mvnUrl);
@@ -113,7 +112,7 @@ public class AggregatorPomsHelper {
 
     public IFolder getProjectPomsFolder() {
         IWorkspace workspace = ResourcesPlugin.getWorkspace();
-        return workspace.getRoot().getFolder(new Path(project.getTechnicalLabel() + "/" + DIR_POMS)); //$NON-NLS-1$
+        return workspace.getRoot().getFolder(new Path(projectTechName + "/" + DIR_POMS)); //$NON-NLS-1$
     }
 
     public void createAggregatorFolderPom(IFolder folder, String folderName, String groupId, IProgressMonitor monitor)
@@ -121,7 +120,7 @@ public class AggregatorPomsHelper {
         if (folder != null) {
             IFile pomFile = folder.getFile(TalendMavenConstants.POM_FILE_NAME);
             Model model = MavenTemplateManager.getAggregatorFolderTemplateModel(pomFile, groupId, folderName,
-                    project.getTechnicalLabel());
+                    projectTechName);
             PomUtil.savePom(monitor, model, pomFile);
         }
     }
@@ -160,7 +159,7 @@ public class AggregatorPomsHelper {
     private static void updateCodeProject(IProgressMonitor monitor, ERepositoryObjectType codeType) {
         try {
             ITalendProcessJavaProject codeProject = getCodesProject(codeType);
-            AggregatorPomsHelper.updateCodeProjectPom(monitor, codeType, codeProject.getProjectPom());
+            updateCodeProjectPom(monitor, codeType, codeProject.getProjectPom());
             buildAndInstallCodesProject(monitor, codeType);
         } catch (Exception e) {
             ExceptionHandler.process(e);
@@ -344,18 +343,17 @@ public class AggregatorPomsHelper {
     public static IPath getJobProjectPath(Property property, String realVersion) {
         // without create/open project
         String projectTechName = ProjectManager.getInstance().getProject(property).getTechnicalLabel();
-        Project project = ProjectManager.getInstance().getProjectFromProjectTechLabel(projectTechName);
         String version = realVersion == null ? property.getVersion() : realVersion;
         IPath path = ItemResourceUtil.getItemRelativePath(property);
-        IFolder processTypeFolder = new AggregatorPomsHelper(project)
+        IFolder processTypeFolder = new AggregatorPomsHelper(projectTechName)
                 .getProcessFolder(ERepositoryObjectType.getItemType(property.getItem()));
         path = processTypeFolder.getLocation().append(path);
         path = path.append(AggregatorPomsHelper.getJobProjectFolderName(property.getLabel(), version));
         return path;
     }
 
-    public static String getJobProjectName(Project project, Property property) {
-        return project.getTechnicalLabel() + "_" + getJobProjectFolderName(property).toUpperCase(); //$NON-NLS-1$
+    public String getJobProjectName(Property property) {
+        return projectTechName + "_" + getJobProjectFolderName(property).toUpperCase(); //$NON-NLS-1$
     }
 
     public static String getJobProjectFolderName(Property property) {
@@ -366,12 +364,13 @@ public class AggregatorPomsHelper {
         return label.toLowerCase() + "_" + version; //$NON-NLS-1$
     }
 
-    public static String getJobProjectId(String id, String version) {
-        return id + "|" + version; //$NON-NLS-1$
+    public static String getJobProjectId(String projectTechName, String id, String version) {
+        return projectTechName + "|" + id + "|" + version; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public static String getJobProjectId(Property property) {
-        return getJobProjectId(property.getId(), property.getVersion());
+        String _projectTechName = ProjectManager.getInstance().getProject(property).getTechnicalLabel();
+        return getJobProjectId(_projectTechName, property.getId(), property.getVersion());
     }
 
     public static void checkJobPomCreation(ITalendProcessJavaProject jobProject) throws CoreException {

@@ -71,7 +71,7 @@ public class BuildCacheManager {
     private AggregatorPomsHelper aggregatorPomsHelper;
 
     private BuildCacheManager() {
-        aggregatorPomsHelper = new AggregatorPomsHelper(ProjectManager.getInstance().getCurrentProject());
+        aggregatorPomsHelper = new AggregatorPomsHelper();
     }
 
     public synchronized static BuildCacheManager getInstance() {

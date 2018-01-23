@@ -50,6 +50,7 @@ import org.talend.core.model.properties.Project;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.repository.SVNConstant;
 import org.talend.core.model.utils.JavaResourcesHelper;
+import org.talend.core.runtime.maven.MavenConstants;
 import org.talend.core.runtime.process.JobInfoProperties;
 import org.talend.core.runtime.process.LastGenerationInfo;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
@@ -603,8 +604,7 @@ public class CreateMavenJobPom extends AbstractMavenProcessorPom {
                 String dependencyGroupId = dependency.getGroupId();
                 String coordinate = dependencyGroupId + ":" + dependency.getArtifactId(); //$NON-NLS-1$
                 if (!childrenCoordinate.contains(coordinate)) {
-                    // FIXME should use dependencyGroupId.startsWith(projectGroupId)
-                    if ("org.talend.libraries".equals(dependencyGroupId) || dependencyGroupId.startsWith("org.talend")) { //$NON-NLS-1$
+                    if (MavenConstants.DEFAULT_LIB_GROUP_ID.equals(dependencyGroupId) || dependencyGroupId.startsWith(projectGroupId)) {
                         addItem(talendlibIncludes, coordinate, SEPARATOR);
                         talendLibCoordinate.add(coordinate);
                     }
