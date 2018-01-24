@@ -25,8 +25,10 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.IAccessRule;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
@@ -41,6 +43,7 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.utils.generation.JavaUtils;
 import org.talend.designer.maven.model.MavenSystemFolders;
+import org.talend.designer.maven.model.ProjectSystemFolder;
 import org.talend.designer.maven.model.TalendMavenConstants;
 
 /**
@@ -91,7 +94,7 @@ public class MavenProjectUtils {
         MavenPlugin.getProjectConfigurationManager().updateProjectConfiguration(project, monitor);
 
         changeClasspath(monitor, project);
-        
+
         // only need this when pom has no parent.
         // IJavaProject javaProject = JavaCore.create(project);
         // clearProjectIndenpendComplianceSettings(javaProject);
@@ -99,64 +102,39 @@ public class MavenProjectUtils {
 
     public static void changeClasspath(IProgressMonitor monitor, IProject p) {
         try {
+            if (!p.hasNature(JavaCore.NATURE_ID)) {
+                JavaUtils.addJavaNature(p, monitor);
+            }
             IJavaProject javaProject = JavaCore.create(p);
             IClasspathEntry[] rawClasspathEntries = javaProject.getRawClasspath();
-            boolean changed = false;
-            boolean foundResources = false;
 
-            for (int index = 0; index < rawClasspathEntries.length; index++) {
-                IClasspathEntry entry = rawClasspathEntries[index];
-
-                IClasspathEntry newEntry = null;
-                if (entry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-                    IPath path = entry.getPath();
-                    if (p.getFullPath().isPrefixOf(path)) {
-                        path = path.removeFirstSegments(1);
-                    }
-
-                    // src/main/resources, in order to removing the 'excluding="**"'.
-                    if (MavenSystemFolders.RESOURCES.getPath().equals(path.toString())) {
-                        foundResources = true;
-                        newEntry = JavaCore.newSourceEntry(entry.getPath(), new IPath[0], new IPath[0], //
-                                entry.getOutputLocation(), entry.getExtraAttributes());
-                    }
-
-                    // src/test/resources, in order to removing the 'excluding="**"'.
-                    if (MavenSystemFolders.RESOURCES_TEST.getPath().equals(path.toString())) {
-                        newEntry = JavaCore.newSourceEntry(entry.getPath(), new IPath[0], new IPath[0], //
-                                entry.getOutputLocation(), entry.getExtraAttributes());
-                    }
-
-                } else if (entry.getEntryKind() == IClasspathEntry.CPE_CONTAINER) {
-                    // remove the special version of jre in container.
-                    IPath defaultJREContainerPath = JavaRuntime.newDefaultJREContainerPath();
-                    if (defaultJREContainerPath.isPrefixOf(entry.getPath())) {
-                        // JavaRuntime.getDefaultJREContainerEntry(); //missing properties
-                        newEntry = JavaCore.newContainerEntry(defaultJREContainerPath, entry.getAccessRules(),
-                                entry.getExtraAttributes(), entry.isExported());
-                    }
-                }
-                if (newEntry != null) {
-                    rawClasspathEntries[index] = newEntry;
-                    changed = true;
-                }
-
-            }
-            if (!foundResources) {
-                List<IClasspathEntry> list = new LinkedList<>(Arrays.asList(rawClasspathEntries));
-                IFolder resources = p.getFolder("src/main/resources");
-                IFolder output = p.getFolder("target/classes");
-                ClasspathAttribute attribute = new ClasspathAttribute("maven.pomderived", Boolean.TRUE.toString());
+            List<IClasspathEntry> list = new LinkedList<>();
+            ClasspathAttribute attribute = new ClasspathAttribute("maven.pomderived", Boolean.TRUE.toString());
+            for (ProjectSystemFolder psf : MavenSystemFolders.ALL_DIRS) {
+                IFolder resources = p.getFolder(psf.getPath());
+                IFolder output = p.getFolder(psf.getOutputPath());
                 IClasspathEntry newEntry = JavaCore.newSourceEntry(resources.getFullPath(), new IPath[0], new IPath[0],
                         output.getFullPath(), new IClasspathAttribute[] { attribute });
-                list.add(1, newEntry);
+                list.add(newEntry);
+            }
+            IPath defaultJREContainerPath = JavaRuntime.newDefaultJREContainerPath();
+
+            IClasspathEntry newEntry = JavaCore.newContainerEntry(defaultJREContainerPath, new IAccessRule[] {},
+                    new IClasspathAttribute[] { attribute }, false);
+            list.add(newEntry);
+
+            newEntry = JavaCore.newContainerEntry(new Path("org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER"),
+                    newEntry.getAccessRules(), new IClasspathAttribute[] { attribute }, newEntry.isExported());
+            list.add(newEntry);
+
+            if (!Arrays.equals(rawClasspathEntries, list.toArray(new IClasspathEntry[] {}))) {
                 rawClasspathEntries = list.toArray(new IClasspathEntry[] {});
-                changed = true;
-            }
-            if (changed) {
                 javaProject.setRawClasspath(rawClasspathEntries, monitor);
+                javaProject.setOutputLocation(p.getFolder(MavenSystemFolders.JAVA.getOutputPath()).getFullPath(), monitor);
             }
-        } catch (CoreException e) {
+        } catch (
+
+        CoreException e) {
             ExceptionHandler.process(e);
         }
     }
