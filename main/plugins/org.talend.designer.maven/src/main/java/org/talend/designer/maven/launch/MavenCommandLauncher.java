@@ -90,6 +90,9 @@ public abstract class MavenCommandLauncher {
      */
     private boolean skipTests = false;
 
+    // skip ci-builder by default.
+    private boolean skipCIBuilder = true;
+
     private Map<String, Object> argumentsMap;
 
     public MavenCommandLauncher(String goals) {
@@ -125,6 +128,11 @@ public abstract class MavenCommandLauncher {
 
     public void setSkipTests(boolean skipTests) {
         this.skipTests = skipTests;
+    }
+
+    
+    public void setSkipCIBuilder(boolean skipCIBuilder) {
+        this.skipCIBuilder = skipCIBuilder;
     }
 
     public void setArgumentsMap(Map<String, Object> argumentsMap) {
@@ -206,6 +214,27 @@ public abstract class MavenCommandLauncher {
                 workingCopy.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
                         "-l " + MavenLaunchUtils.quote(generatedLog.toPortableString()) + " " //$NON-NLS-1$ //$NON-NLS-2$
                                 + workingCopy.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "")); //$NON-NLS-1$
+            }
+            // Use Maven 2 Legacy Local Repository behavior if offline
+            if (MavenPlugin.getMavenConfiguration().isOffline()) {
+                workingCopy.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS,
+                        "-llr " + workingCopy.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, "")); //$NON-NLS-1$ //$NON-NLS-2$
+            }
+
+            if (skipCIBuilder) {
+                programArgs = workingCopy.getAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, ""); //$NON-NLS-1$
+                if (StringUtils.isBlank(programArgs)) {
+                    programArgs = TalendMavenConstants.ARG_SKIP_CI_BUILDER;
+                } else {
+                    if (!StringUtils.contains(programArgs, TalendMavenConstants.PROFILE_CI_BUILDER)) {
+                        if (StringUtils.contains(programArgs, "-P ")) { //$NON-NLS-1$
+                            programArgs = StringUtils.replace(programArgs, "-P ", TalendMavenConstants.ARG_SKIP_CI_BUILDER + ","); //$NON-NLS-1$ //$NON-NLS-2$
+                        } else {
+                            programArgs += " " + TalendMavenConstants.ARG_SKIP_CI_BUILDER; //$NON-NLS-1$
+                        }
+                    }
+                }
+                workingCopy.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, programArgs);
             }
 
             // TODO when launching Maven with debugger consider to add the following property

@@ -99,8 +99,7 @@ public class AggregatorPomsHelper {
             MavenPomCommandLauncher launcher = new MavenPomCommandLauncher(pomFile, TalendMavenConstants.GOAL_INSTALL);
             if (current) {
                 Map<String, Object> argumentsMap = new HashMap<>();
-                argumentsMap.put(TalendProcessArgumentConstant.ARG_PROGRAM_ARGUMENTS,
-                        "-N " + TalendMavenConstants.ARG_SKIP_CI_BUILDER); // $NON-NLS-N$
+                argumentsMap.put(TalendProcessArgumentConstant.ARG_PROGRAM_ARGUMENTS, "-N"); // $NON-NLS-N$
                 launcher.setArgumentsMap(argumentsMap);
             }
             launcher.execute(new NullProgressMonitor());
