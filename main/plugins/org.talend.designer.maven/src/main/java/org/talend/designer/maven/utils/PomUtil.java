@@ -59,6 +59,7 @@ import org.eclipse.m2e.core.MavenPlugin;
 import org.eclipse.m2e.core.embedder.MavenModelManager;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.exception.PersistenceException;
+import org.talend.commons.runtime.utils.io.IOUtils;
 import org.talend.commons.utils.VersionUtils;
 import org.talend.commons.utils.generation.JavaUtils;
 import org.talend.commons.utils.workbench.resources.ResourceUtils;
@@ -817,14 +818,22 @@ public class PomUtil {
         IProject project = talendProject.getProject();
         IFile backFile = project.getFile(TalendMavenConstants.POM_BACKUP_FILE_NAME);
         IFile pomFile = project.getFile(TalendMavenConstants.POM_FILE_NAME);
+        boolean isChanged = false;
         try {
             if (backFile.exists()) {
                 if (pomFile.exists()) {
-                    pomFile.delete(true, false, null);
+                    isChanged = !IOUtils.contentEquals(backFile.getContents(), pomFile.getContents());
+                    if (isChanged) {
+                        pomFile.delete(true, false, null);
+                    }
+                } else {
+                    isChanged = true;
                 }
-                backFile.copy(pomFile.getFullPath(), true, null);
+                if (isChanged) {
+                    backFile.copy(pomFile.getFullPath(), true, null);
+                }
             }
-        } catch (CoreException e) {
+        } catch (CoreException | IOException e) {
             ExceptionHandler.process(e);
         } finally {
             try {
@@ -832,7 +841,12 @@ public class PomUtil {
                     backFile.delete(true, false, null);
                 }
             } catch (CoreException e) {
-                //
+                System.gc();
+                try {
+                    backFile.delete(true, false, null);
+                } catch (CoreException e1) {
+                    //
+                }
             }
         }
     }

@@ -53,4 +53,25 @@ public class IOUtils {
         return unitCRC;
     }
 
+    public static boolean contentEquals(InputStream input1, InputStream input2) throws IOException {
+        try {
+            return org.apache.commons.io.IOUtils.contentEquals(input1, input2);
+        } finally {
+            if (input1 != null) {
+                try {
+                    input1.close();
+                } catch (IOException e) {
+                    //
+                }
+            }
+            if (input2 != null) {
+                try {
+                    input2.close();
+                } catch (IOException e) {
+                    //
+                }
+            }
+        }
+    }
+
 }
