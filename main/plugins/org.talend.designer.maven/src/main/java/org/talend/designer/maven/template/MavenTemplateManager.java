@@ -250,7 +250,7 @@ public class MavenTemplateManager {
         profile.getBuild().addPlugin(plugin);
         plugin.setGroupId(TalendMavenConstants.DEFAULT_GROUP_ID);
         plugin.setArtifactId("ci.builder"); //$NON-NLS-1$
-        plugin.setVersion(VersionUtils.getInternalVersion()); //$NON-NLS-1$
+        plugin.setVersion(VersionUtils.getTalendVersion());
 
         List<PluginExecution> executions = new ArrayList<>();
         PluginExecution pe = new PluginExecution();
