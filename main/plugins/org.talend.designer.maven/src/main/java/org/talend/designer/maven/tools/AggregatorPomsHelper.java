@@ -31,8 +31,10 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.m2e.core.MavenPlugin;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.core.GlobalServiceRegister;
@@ -48,6 +50,7 @@ import org.talend.core.runtime.maven.MavenUrlHelper;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
 import org.talend.designer.core.ICamelDesignerCoreService;
+import org.talend.designer.maven.DesignerMavenPlugin;
 import org.talend.designer.maven.launch.MavenPomCommandLauncher;
 import org.talend.designer.maven.model.TalendJavaProjectConstants;
 import org.talend.designer.maven.model.TalendMavenConstants;
@@ -160,7 +163,23 @@ public class AggregatorPomsHelper {
         try {
             ITalendProcessJavaProject codeProject = getCodesProject(codeType);
             updateCodeProjectPom(monitor, codeType, codeProject.getProjectPom());
-            buildAndInstallCodesProject(monitor, codeType);
+            Job job = new Job("Install " + codeType.getLabel()) {
+
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    try {
+                        buildAndInstallCodesProject(monitor, codeType);
+                        return org.eclipse.core.runtime.Status.OK_STATUS;
+                    } catch (Exception e) {
+                        return new org.eclipse.core.runtime.Status(IStatus.ERROR, DesignerMavenPlugin.PLUGIN_ID, 1,
+                                e.getMessage(), e);
+                    }
+                }
+
+            };
+            job.setUser(false);
+            job.setPriority(Job.INTERACTIVE);
+            job.schedule();
         } catch (Exception e) {
             ExceptionHandler.process(e);
         }
@@ -249,7 +268,7 @@ public class AggregatorPomsHelper {
                         }
                     }
                     oldModules.addAll(modules);
-                    
+
                     PomUtil.savePom(null, model, mainPomFile);
                 } catch (Exception e) {
                     ExceptionHandler.process(e);
