@@ -42,6 +42,7 @@ import org.talend.designer.maven.model.TalendMavenConstants;
 import org.talend.designer.maven.utils.PomUtil;
 import org.talend.designer.runprocess.IRunProcessService;
 import org.talend.repository.ProjectManager;
+import org.talend.repository.model.IRepositoryService;
 
 /**
  * DOC zwxue class global comment. Detailled comment
@@ -105,6 +106,7 @@ public class BuildCacheManager {
         currentCache.clear();
         currentmodules.clear();
         subjobProjects.clear();
+        aggregatorPomsHelper = new AggregatorPomsHelper();
     }
 
     public void performBuildSuccess() {
@@ -221,13 +223,26 @@ public class BuildCacheManager {
     }
 
     private String getModulePath(Property property) {
-        String modulePath = ""; //$NON-NLS-1$
+        String modulePath = null;
         IPath basePath = null;
         IPath jobProjectPath = AggregatorPomsHelper.getJobProjectPath(property, null);
         if (!ProjectManager.getInstance().isInCurrentMainProject(property)) {
-            modulePath = "../../"; //$NON-NLS-1$
-            basePath = ResourcesPlugin.getWorkspace().getRoot().getLocation();
+            if (GlobalServiceRegister.getDefault().isServiceRegistered(IRepositoryService.class)) {
+                IRepositoryService service = (IRepositoryService) GlobalServiceRegister.getDefault()
+                        .getService(IRepositoryService.class);
+                if (service.isGIT()) {
+                    modulePath = "../../../../"; //$NON-NLS-1$
+                    basePath = ResourcesPlugin.getWorkspace().getRoot().getLocation().append("/.repositories"); //$NON-NLS-1$
+                } else if (service.isSVN()) {
+                    modulePath = "../../"; //$NON-NLS-1$
+                    basePath = ResourcesPlugin.getWorkspace().getRoot().getLocation();
+                }
+            }
+            if (modulePath == null || basePath == null) {
+                return null;
+            }
         } else {
+            modulePath = ""; //$NON-NLS-1$
             basePath = aggregatorPomsHelper.getProjectPomsFolder().getLocation();
         }
         jobProjectPath = jobProjectPath.makeRelativeTo(basePath);
