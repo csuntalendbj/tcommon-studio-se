@@ -36,8 +36,10 @@ import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.runtime.maven.MavenArtifact;
 import org.talend.core.runtime.process.ITalendProcessJavaProject;
 import org.talend.core.runtime.process.TalendProcessArgumentConstant;
-import org.talend.cwm.helper.ResourceHelper;
+import org.talend.core.runtime.repository.item.ItemProductKeys;
+import org.talend.core.runtime.util.ItemDateParser;
 import org.talend.designer.maven.launch.MavenPomCommandLauncher;
+import org.talend.designer.maven.model.BuildCacheInfo;
 import org.talend.designer.maven.model.TalendMavenConstants;
 import org.talend.designer.maven.utils.PomUtil;
 import org.talend.designer.runprocess.IRunProcessService;
@@ -55,17 +57,17 @@ public class BuildCacheManager {
 
     private static BuildCacheManager instance;
 
-    private Map<String, String> cache = new HashMap<>();
+    private Map<String, BuildCacheInfo> cache = new HashMap<>();
 
-    private Map<String, String> currentCache = new HashMap<>();
+    private Map<String, BuildCacheInfo> currentCache = new HashMap<>();
 
     private Set<String> currentmodules = new HashSet<>();
 
     private Set<ITalendProcessJavaProject> subjobProjects = new HashSet<>();
 
-    private Map<ERepositoryObjectType, String> codesLastChangeCache = new HashMap<>();
+    private Map<ERepositoryObjectType, Date> codesLastChangeCache = new HashMap<>();
 
-    private Map<ERepositoryObjectType, String> codesLastBuildCache = new HashMap<>();
+    private Map<ERepositoryObjectType, Date> codesLastBuildCache = new HashMap<>();
 
     private IFile pomFile;
 
@@ -83,15 +85,30 @@ public class BuildCacheManager {
     }
 
     public boolean isJobBuild(Property property) {
-        // FIXME use Date compare via ItemDateParser.parseAdditionalDate()
-        String cachedTimestamp = cache.get(getKey(property));
-        String currentTimeStamp = getTimestamp(property);
+        BuildCacheInfo cacheInfo = cache.get(getKey(property));
+        if (cacheInfo == null) {
+            return false;
+        }
+        Date cachedTimestamp = cacheInfo.getTimestamp();
+        Date currentTimeStamp = getTimestamp(property);
+        if (currentTimeStamp.compareTo(cachedTimestamp) != 0) {
+            return false;
+        }
+        String cachedBuildType = cacheInfo.getBuildType();
+        String currentBuildType = getBuildType(property);
+        // default build type of standard/bd job could be null
+        if (cachedBuildType == null && currentBuildType == null) {
+            return true;
+        }
+        if (cachedBuildType == null || currentBuildType == null) {
+            return false;
+        }
 
-        return currentTimeStamp.equals(cachedTimestamp);
+        return currentBuildType.equals(cachedBuildType);
     }
 
     public void putCache(Property property) {
-        currentCache.put(getKey(property), getTimestamp(property));
+        currentCache.put(getKey(property), generateCacheInfo(property));
         currentmodules.add(getModulePath(property));
         subjobProjects.add(getTalendJobJavaProject(property));
     }
@@ -163,29 +180,32 @@ public class BuildCacheManager {
     }
 
     public void updateCodesLastChangeDate(ERepositoryObjectType codeType, Property property) {
-        String currentLastChangeDate = getTimestamp(property);
-        String cacheLastChangeDate = codesLastChangeCache.get(codeType);
-        if (!currentLastChangeDate.equals(cacheLastChangeDate)) {
+        Date currentLastChangeDate = getTimestamp(property);
+        Date cacheLastChangeDate = codesLastChangeCache.get(codeType);
+        if (cacheLastChangeDate == null || currentLastChangeDate.compareTo(cacheLastChangeDate) != 0) {
             codesLastChangeCache.put(codeType, currentLastChangeDate);
         }
     }
 
     public void updateCodeLastBuildDate(ERepositoryObjectType codeType) {
-        String cacheLastChangeDate = codesLastChangeCache.get(codeType);
+        Date cacheLastChangeDate = codesLastChangeCache.get(codeType);
         if (cacheLastChangeDate == null) {
-            cacheLastChangeDate = ResourceHelper.DATEFORMAT.format(new Date());
+            cacheLastChangeDate = new Date();
             codesLastChangeCache.put(codeType, cacheLastChangeDate);
         }
         codesLastBuildCache.put(codeType, cacheLastChangeDate);
     }
 
     public boolean isCodesBuild(ERepositoryObjectType codeType) {
-        String lastBuildDate = codesLastBuildCache.get(codeType);
+        Date lastBuildDate = codesLastBuildCache.get(codeType);
         if (lastBuildDate == null) {
             return false;
         }
-        String cacheLastChangeDate = codesLastChangeCache.get(codeType);
-        return lastBuildDate.equals(cacheLastChangeDate);
+        Date cacheLastChangeDate = codesLastChangeCache.get(codeType);
+        if (cacheLastChangeDate == null) {
+            return false;
+        }
+        return lastBuildDate.compareTo(cacheLastChangeDate) == 0;
     }
 
     private void createBuildAggregatorPom() throws Exception {
@@ -217,9 +237,16 @@ public class BuildCacheManager {
         return key;
     }
 
-    private String getTimestamp(Property property) {
-        String value = (String) property.getAdditionalProperties().get("modified_date"); //$NON-NLS-1$
-        return value;
+    private BuildCacheInfo generateCacheInfo(Property property) {
+        return new BuildCacheInfo(getKey(property), getBuildType(property), getTimestamp(property));
+    }
+
+    private Date getTimestamp(Property property) {
+        return ItemDateParser.parseAdditionalDate(property, ItemProductKeys.DATE.getModifiedKey());
+    }
+
+    private String getBuildType(Property property) {
+        return (String) property.getAdditionalProperties().get(TalendProcessArgumentConstant.ARG_BUILD_TYPE);
     }
 
     private String getModulePath(Property property) {
