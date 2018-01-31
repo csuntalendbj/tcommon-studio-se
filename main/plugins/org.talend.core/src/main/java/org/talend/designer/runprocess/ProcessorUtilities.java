@@ -1807,10 +1807,15 @@ public class ProcessorUtilities {
             if (!activate) {
                 continue;
             }
-            if ("tRunJob".equalsIgnoreCase(node.getComponentName())) { //$NON-NLS-1$
-                String jobIds = getParameterValue(node.getElementParameter(), "PROCESS:PROCESS_TYPE_PROCESS"); //$NON-NLS-1$
-                String jobContext = getParameterValue(node.getElementParameter(), "PROCESS:PROCESS_TYPE_CONTEXT"); //$NON-NLS-1$
-                String jobVersion = getParameterValue(node.getElementParameter(), "PROCESS:PROCESS_TYPE_VERSION"); //$NON-NLS-1$
+            boolean isCTalendJob = "cTalendJob".equalsIgnoreCase(node.getComponentName());
+            if ("tRunJob".equalsIgnoreCase(node.getComponentName()) || isCTalendJob) { //$NON-NLS-1$
+
+                String jobIds = getParameterValue(node.getElementParameter(),
+                        isCTalendJob ? "SELECTED_JOB_NAME:PROCESS_TYPE_PROCESS" : "PROCESS:PROCESS_TYPE_PROCESS"); //$NON-NLS-1$
+                String jobContext = getParameterValue(node.getElementParameter(),
+                        isCTalendJob ? "SELECTED_JOB_NAME:PROCESS_TYPE_CONTEXT" : "PROCESS:PROCESS_TYPE_CONTEXT"); //$NON-NLS-1$
+                String jobVersion = getParameterValue(node.getElementParameter(),
+                        isCTalendJob ? "SELECTED_JOB_NAME:PROCESS_TYPE_VERSION" : "PROCESS:PROCESS_TYPE_VERSION"); //$NON-NLS-1$
                 // feature 19312
                 String[] jobsArr = jobIds.split(ProcessorUtilities.COMMA);
                 for (String jobId : jobsArr) {

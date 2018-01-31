@@ -164,4 +164,10 @@ public interface ITalendProcessJavaProject {
 
     void setUseTempPom(boolean useTempPom);
 
+    /**
+     * DOC sunchaoqun Comment method "getBundleResourcesFolder". store some feature files and related jar files 
+     * @return
+     */
+    IFolder getBundleResourcesFolder();
+
 }

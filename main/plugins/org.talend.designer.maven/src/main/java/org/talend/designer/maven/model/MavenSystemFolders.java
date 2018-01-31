@@ -26,6 +26,8 @@ public class MavenSystemFolders {
     public static final ProjectSystemFolder RESOURCES = new ProjectSystemFolder("src/main/resources", "target/classes");
 
     public static final ProjectSystemFolder EXT_RESOURCES = new ProjectSystemFolder("src/main/ext-resources", "target/classes");
+    
+    public static final ProjectSystemFolder BUNDLE_RESOURCES = new ProjectSystemFolder("src/main/bundle-resources", "target/classes");
 
     public static final ProjectSystemFolder RESOURCES_TEST = new ProjectSystemFolder("src/test/resources", "target/test-classes");
 
