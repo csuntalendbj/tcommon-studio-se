@@ -53,6 +53,8 @@ public interface IProjectSettingTemplateConstants {
 
     final static String ASSEMBLY_JOB_TEMPLATE_FILE_NAME = "assembly_job_template.xml";
 
+    final static String ASSEMBLY_ROUTE_TEMPLATE_FILE_NAME = "assembly_route_template.xml";
+
     final static String PROJECT_TEMPLATE_FILE_NAME = "pom_project_template.xml";
 
     final static String MAVEN_USER_SETTING_TEMPLATE_FILE_NAME = "maven_user_settings.xml";
